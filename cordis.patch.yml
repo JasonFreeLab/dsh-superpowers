@@ -1,0 +1,6 @@
+# dsh-superpowers bundle patch.
+# 通过 `dsh plugin --profile <name> add dsh-superpowers` 安装后，
+# 本 patch 会被合并进 profile 的插件组合，把 superpowers 技能提供者注入全局层。
+- insert:
+    - id: superpowers
+      name: dsh-superpowers

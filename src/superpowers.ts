@@ -1,0 +1,341 @@
+/**
+ * dsh-superpowers — obra/superpowers 的 DSH 移植。
+ *
+ * 把 obra/superpowers 的 14 个技能以 DSH 原生 SkillProvider 形式暴露：
+ * 通过 `ctx.skills.registerProvider` 注册到全局层。rank 取 550，使
+ * filesystem 提供商（项目 100–300 / 用户 400–500）提供的同名技能可以覆盖
+ * 本包内置技能，而本包又优先于其它打包提供商（BUNDLED_SKILL_RANK = 600）。
+ *
+ * 内容源：skills/ 目录下的每个 <name>/SKILL.md，frontmatter 解析 name、
+ * description 与调用策略；正文按需惰性加载。
+ */
+
+import { readdir, readFile, stat } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { parse } from 'yaml'
+import type { Context } from '@deepseek-ai/cordis'
+import type {
+  SkillCandidate,
+  SkillDefinition,
+  SkillInvocationPolicy,
+  SkillLookupOptions,
+  SkillProvider,
+  SkillProviderControl,
+} from '@deepseek-ai/dsh-skill'
+import { isSkillName } from '@deepseek-ai/dsh-skill'
+import Schema from '@deepseek-ai/schemastery'
+
+// ---------------------------------------------------------------------------
+// Config — 默认值写在 schema；可选字段用可选属性声明
+// ---------------------------------------------------------------------------
+
+export const Config = Schema.object({
+  /** 注册到 ctx.skills 的 provider 名称，默认 superpowers；不可为保留名 runtime */
+  providerName: Schema.string().default('superpowers'),
+  /** skill 目录绝对路径；缺省取包内 skills/，便于本地调试指向其它目录 */
+  skillDir: Schema.string(),
+}).description('dsh-superpowers 插件配置')
+
+export interface Config {
+  providerName: string
+  skillDir?: string
+}
+
+// ---------------------------------------------------------------------------
+// 插件元信息
+// ---------------------------------------------------------------------------
+
+export const name = 'superpowers'
+export const inject = ['skills'] as const
+
+const SUPERPOWERS_RANK = 550
+const RUNTIME_PROVIDER = 'runtime'
+
+// ---------------------------------------------------------------------------
+// frontmatter 解析
+// ---------------------------------------------------------------------------
+
+function stringField(data: Record<string, unknown>, key: string): string | undefined {
+  const v = data[key]
+  return typeof v === 'string' && v.length > 0 ? v : undefined
+}
+
+function optionalString(data: Record<string, unknown>, key: string): Record<string, string> {
+  const v = data[key]
+  return typeof v === 'string' && v.length > 0 ? { [key]: v } : {}
+}
+
+function frontmatterBoolean(data: Record<string, unknown>, key: string): boolean | undefined {
+  if (!Object.hasOwn(data, key)) return undefined
+  const v = data[key]
+  if (typeof v === 'boolean') return v
+  if (v === 1 || v === '1') return true
+  if (v === 0 || v === '0') return false
+  if (typeof v === 'string') {
+    switch (v.toLowerCase()) {
+      case 'true':
+      case 'yes':
+      case 'on':
+        return true
+      case 'false':
+      case 'no':
+      case 'off':
+        return false
+    }
+  }
+  throw new TypeError(`frontmatter field "${key}" must be a boolean`)
+}
+
+function rejectLegacyKey(data: Record<string, unknown>, legacy: string, canonical: string): void {
+  if (Object.hasOwn(data, legacy)) {
+    throw new Error(`frontmatter field "${legacy}" is unsupported; use "${canonical}"`)
+  }
+}
+
+function parseInvocationPolicy(data: Record<string, unknown>): SkillInvocationPolicy {
+  rejectLegacyKey(data, 'disableModelInvocation', 'disable-model-invocation')
+  rejectLegacyKey(data, 'modelInvocable', 'disable-model-invocation')
+  rejectLegacyKey(data, 'userInvocable', 'user-invocable')
+  const disableModelInvocation = frontmatterBoolean(data, 'disable-model-invocation')
+  const userInvocable = frontmatterBoolean(data, 'user-invocable')
+  return {
+    modelInvocable: disableModelInvocation !== true,
+    userInvocable: userInvocable !== false,
+  }
+}
+
+function optionalMetadata(data: Record<string, unknown>): Record<string, unknown> {
+  const v = data['metadata']
+  if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+    return { metadata: v as Record<string, unknown> }
+  }
+  return {}
+}
+
+function findClosingFrontmatter(raw: string, start: number): { start: number; bodyStart: number } | undefined {
+  let lineStart = start
+  while (lineStart <= raw.length) {
+    const nl = raw.indexOf('\n', lineStart)
+    const lineEnd = nl < 0 ? raw.length : nl
+    if (raw.slice(lineStart, lineEnd).replace(/\r$/, '') === '---') {
+      return { start: lineStart, bodyStart: nl < 0 ? raw.length : nl + 1 }
+    }
+    if (nl < 0) return undefined
+    lineStart = nl + 1
+  }
+  return undefined
+}
+
+function parseFrontmatter(raw: string): { data: Record<string, unknown>; body: string } | undefined {
+  // 去 BOM（U+FEFF），避免 Windows 编辑器带入的 BOM 让首行无法匹配 ---
+  if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1)
+  const firstNl = raw.indexOf('\n')
+  if (firstNl < 0) return undefined
+  if (raw.slice(0, firstNl).replace(/\r$/, '') !== '---') return undefined
+  const start = firstNl + 1
+  const closing = findClosingFrontmatter(raw, start)
+  if (!closing) return undefined
+  const parsed = parse(raw.slice(start, closing.start))
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return undefined
+  return { data: parsed as Record<string, unknown>, body: raw.slice(closing.bodyStart) }
+}
+
+function resolveDefaultSkillDir(configSkillDir?: string): string {
+  if (configSkillDir) return resolve(configSkillDir)
+  const here = fileURLToPath(import.meta.url)
+  return resolve(dirname(here), '..', 'skills')
+}
+
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
+class SuperpowersProvider implements SkillProvider {
+  readonly name: string
+  private readonly skillDir: string
+  private readonly ctx: Context
+
+  constructor(ctx: Context, _control: SkillProviderControl, config: Config) {
+    if (config.providerName === RUNTIME_PROVIDER) {
+      throw new Error(`[superpowers] providerName "${RUNTIME_PROVIDER}" 为保留名，不可用`)
+    }
+    this.ctx = ctx
+    this.name = config.providerName
+    this.skillDir = resolveDefaultSkillDir(config.skillDir)
+  }
+
+  async list(options: SkillLookupOptions): Promise<readonly SkillCandidate[]> {
+    options.signal?.throwIfAborted()
+
+    let entries: import('node:fs').Dirent[]
+    try {
+      entries = await (readdir as unknown as (p: string, o: { withFileTypes: true }) => Promise<import('node:fs').Dirent[]>)(this.skillDir, { withFileTypes: true })
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException)?.code
+      if (code === 'ENOENT' || code === 'ENOTDIR') {
+        this.ctx.logger.warn(`[superpowers] skillDir not found: ${this.skillDir}`)
+        return []
+      }
+      throw err
+    }
+
+    const candidates: SkillCandidate[] = []
+    const seen = new Set<string>()
+
+    for (const entry of [...entries].sort((a, b) => a.name.localeCompare(b.name))) {
+      options.signal?.throwIfAborted()
+      if (!entry.isDirectory() || entry.name.startsWith('.')) continue
+
+      const skillPath = join(this.skillDir, entry.name, 'SKILL.md')
+      try {
+        await stat(skillPath)
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException)?.code
+        this.ctx.logger.debug(`[superpowers] skip ${entry.name}: no SKILL.md (${code ?? String(err)})`)
+        continue
+      }
+
+      let parsed
+      try {
+        parsed = await parseSkillFile(skillPath)
+      } catch (err) {
+        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: YAML 解析失败 — ${String(err)}`)
+        continue
+      }
+      if (!parsed) {
+        this.ctx.logger.warn(`[superpowers] skip ${entry.name}: missing or invalid frontmatter`)
+        continue
+      }
+
+      const skillName = stringField(parsed.data, 'name')
+      const description = stringField(parsed.data, 'description')
+      if (!skillName || !description) {
+        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: frontmatter requires name and description`)
+        continue
+      }
+      if (!isSkillName(skillName)) {
+        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: invalid skill name "${skillName}"`)
+        continue
+      }
+      if (seen.has(skillName)) {
+        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: duplicate skill name "${skillName}"`)
+        continue
+      }
+      if (skillName !== entry.name) {
+        this.ctx.logger.warn(`[superpowers] skill name "${skillName}" != directory "${entry.name}" (using frontmatter)`)
+      }
+
+      let invocation: SkillInvocationPolicy
+      try {
+        invocation = parseInvocationPolicy(parsed.data)
+      } catch (err) {
+        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: ${String(err)}`)
+        continue
+      }
+
+      seen.add(skillName)
+      candidates.push({
+        name: skillName,
+        description,
+        ...optionalString(parsed.data, 'whenToUse'),
+        invocation,
+        source: 'bundled',
+        provider: this.name,
+        rank: SUPERPOWERS_RANK,
+        locator: { path: skillPath, directory: dirname(skillPath) },
+        resourceBase: { kind: 'directory', path: dirname(skillPath) },
+        path: skillPath,
+        ...optionalMetadata(parsed.data),
+      } as SkillCandidate)
+    }
+
+    return candidates
+  }
+
+  async get(candidate: SkillCandidate, options: SkillLookupOptions): Promise<SkillDefinition | undefined> {
+    options.signal?.throwIfAborted()
+    const locator = candidate.locator as { path: string; directory: string } | undefined
+    if (!locator?.path || !locator?.directory) return undefined
+
+    let raw: string | undefined
+    try {
+      raw = await readFile(locator.path, 'utf8')
+    } catch (err) {
+      if ((err as DOMException)?.name === 'AbortError') throw err
+      const code = (err as NodeJS.ErrnoException)?.code
+      if (code === 'ENOENT') return undefined
+      this.ctx.logger.warn(`[superpowers] get ${candidate.name}: read failed (${code ?? String(err)})`)
+      return undefined
+    }
+    if (raw === undefined) return undefined
+
+    options.signal?.throwIfAborted()
+    const parsed = parseFrontmatter(raw)
+    if (!parsed) {
+      this.ctx.logger.warn(`[superpowers] get ${candidate.name}: missing or invalid frontmatter`)
+      return undefined
+    }
+
+    const skillName = stringField(parsed.data, 'name')
+    const description = stringField(parsed.data, 'description')
+    if (!skillName || !description) {
+      this.ctx.logger.warn(`[superpowers] get ${candidate.name}: frontmatter requires name and description`)
+      return undefined
+    }
+    if (skillName !== candidate.name) {
+      // 名称漂移视为失效，触发上层 invalidate
+      this.ctx.logger.warn(`[superpowers] get ${candidate.name}: name drift "${skillName}" != "${candidate.name}"`)
+      return undefined
+    }
+
+    let invocation: SkillInvocationPolicy
+    try {
+      invocation = parseInvocationPolicy(parsed.data)
+    } catch (err) {
+      this.ctx.logger.warn(`[superpowers] get ${candidate.name}: ${String(err)}`)
+      return undefined
+    }
+
+    return {
+      name: skillName,
+      description,
+      ...optionalString(parsed.data, 'whenToUse'),
+      invocation,
+      source: 'bundled',
+      provider: this.name,
+      resourceBase: { kind: 'directory', path: locator.directory },
+      path: locator.path,
+      ...optionalMetadata(parsed.data),
+      content: parsed.body.trim(),
+    }
+  }
+}
+
+async function parseSkillFile(path: string): Promise<{ data: Record<string, unknown>; body: string } | undefined> {
+  const raw = await readFile(path, 'utf8')
+  return parseFrontmatter(raw)
+}
+
+// ---------------------------------------------------------------------------
+// 插件入口 — 所有副作用走 ctx 注册，随 fiber 卸载自动清理
+// ---------------------------------------------------------------------------
+
+export function apply(ctx: Context, config: Config): void {
+  if (config.providerName === RUNTIME_PROVIDER) {
+    throw new Error(`[superpowers] providerName "${RUNTIME_PROVIDER}" 为保留名，不可用`)
+  }
+
+  ctx.logger.info(`[superpowers] registering provider "${config.providerName}"`)
+
+  ctx.effect(() => {
+    const disposeProvider = ctx.skills.registerProvider((control) => {
+      return new SuperpowersProvider(ctx, control, config)
+    })
+    return () => {
+      disposeProvider()
+    }
+  })
+}
+
+export default { name, inject, Config, apply }
