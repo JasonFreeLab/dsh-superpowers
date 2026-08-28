@@ -110,9 +110,9 @@ async function runtimeCheck() {
   try {
     plugin = await import(join(root, 'lib', 'superpowers.js'))
   } catch (err) {
-    console.log('')
-    console.log('[runtime] skipped: lib not built (' + err.message + ')')
-    return
+    console.error('')
+    console.error('FAIL: could not load lib/superpowers.js (' + err.message + ')')
+    process.exit(1)
   }
 
   let provider = null
