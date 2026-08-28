@@ -8,9 +8,11 @@
   "files": [
     "lib/",
     "skills/",
+    "scripts/",
     "cordis.patch.yml",
     "README.md",
     "README.zh.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
@@ -18,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "prepare": "npm run build",
     "verify": "node scripts/verify.mjs",
+    "test": "node scripts/test.mjs",
     "prepack": "npm run build"
   },
   "dsh": {
