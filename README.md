@@ -2,7 +2,7 @@
 
 [obra/superpowers](https://github.com/obra/superpowers) 的 [DSH](https://github.com/deepseek-ai/deepseek-harness)（DeepSeek Harness）移植版 —— 把完整的多智能体软件开发方法论以**原生 DSH 技能**形式开箱即用。
 
-> 参考实现：[Wenaixi/dsh-superpower](https://github.com/Wenaixi/dsh-superpower)。本包为独立实现：同样的 `ctx.skills` 三角色架构，但内容直接取自上游 obra/superpowers（v6.3.0），并做了面向 DSH 工具集的映射。
+> 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v6.3.0，作者 Jesse Vincent / Prime Radiant）。技能内容直接取自上游，并做了面向 DSH 工具集的映射。
 
 ## 是什么
 
