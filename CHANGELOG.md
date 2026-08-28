@@ -2,7 +2,7 @@
 
 ## 0.1.0
 
-- 首次发布：移植 obra/superpowers v6.3.0 的 14 个技能到 DSH。
-- 通过 `ctx.skills.registerProvider` 注册全局层 SkillProvider（rank 550，项目/用户级技能可覆盖）。
-- 14 个技能保持英文原文（国际化），并映射到 DSH 工具集。
-- 附带 `scripts/verify.mjs` 结构校验 + 运行时冒烟。
+- Initial release: port the 14 skills from obra/superpowers v6.3.0 to DSH.
+- Registers a global-layer SkillProvider via `ctx.skills.registerProvider` (rank 550, overridable by project/user skills).
+- 14 skills kept in original English (i18n), mapped onto the DSH toolset.
+- Ships `scripts/verify.mjs` structural check + runtime smoke.

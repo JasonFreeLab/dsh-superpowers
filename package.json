@@ -1,7 +1,7 @@
 {
   "name": "dsh-superpowers",
   "version": "0.1.0",
-  "description": "obra/superpowers 的 DSH 移植 — 将完整的多智能体软件开发方法论（TDD、计划、调试、评审）以原生 DSH 技能开箱即用",
+  "description": "A DSH port of obra/superpowers — the full multi-agent software-development methodology (TDD, planning, debugging, review) as native DSH skills",
   "type": "module",
   "main": "lib/superpowers.js",
   "types": "lib/superpowers.d.ts",

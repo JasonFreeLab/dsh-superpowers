@@ -1,13 +1,14 @@
 /**
- * dsh-superpowers — obra/superpowers 的 DSH 移植。
+ * dsh-superpowers — a DSH port of obra/superpowers.
  *
- * 把 obra/superpowers 的 14 个技能以 DSH 原生 SkillProvider 形式暴露：
- * 通过 `ctx.skills.registerProvider` 注册到全局层。rank 取 550，使
- * filesystem 提供商（项目 100–300 / 用户 400–500）提供的同名技能可以覆盖
- * 本包内置技能，而本包又优先于其它打包提供商（BUNDLED_SKILL_RANK = 600）。
+ * Exposes the 14 obra/superpowers skills as native DSH skills through a
+ * `SkillProvider` registered via `ctx.skills.registerProvider` into the
+ * global layer. Rank 550 lets same-named skills from the filesystem providers
+ * (project 100-300 / user 400-500) override the bundled ones, while this
+ * package overrides other bundled providers (BUNDLED_SKILL_RANK = 600).
  *
- * 内容源：skills/ 目录下的每个 <name>/SKILL.md，frontmatter 解析 name、
- * description 与调用策略；正文按需惰性加载。
+ * Content source: each <name>/SKILL.md under skills/; frontmatter supplies
+ * name, description and invocation policy, and the body is loaded lazily.
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises'
@@ -27,15 +28,15 @@ import { isSkillName } from '@deepseek-ai/dsh-skill'
 import Schema from '@deepseek-ai/schemastery'
 
 // ---------------------------------------------------------------------------
-// Config — 默认值写在 schema；可选字段用可选属性声明
+// Config schema and interface
 // ---------------------------------------------------------------------------
 
 export const Config = Schema.object({
-  /** 注册到 ctx.skills 的 provider 名称，默认 superpowers；不可为保留名 runtime */
+  /** provider name registered on ctx.skills; defaults to superpowers; 'runtime' is reserved */
   providerName: Schema.string().default('superpowers'),
-  /** skill 目录绝对路径；缺省取包内 skills/，便于本地调试指向其它目录 */
+  /** absolute skill directory; defaults to the package's skills/; useful for local debugging */
   skillDir: Schema.string(),
-}).description('dsh-superpowers 插件配置')
+}).description('dsh-superpowers plugin configuration')
 
 export interface Config {
   providerName: string
@@ -43,7 +44,7 @@ export interface Config {
 }
 
 // ---------------------------------------------------------------------------
-// 插件元信息
+// plugin metadata
 // ---------------------------------------------------------------------------
 
 export const name = 'superpowers'
@@ -53,7 +54,7 @@ const SUPERPOWERS_RANK = 550
 const RUNTIME_PROVIDER = 'runtime'
 
 // ---------------------------------------------------------------------------
-// frontmatter 解析
+// frontmatter parsing
 // ---------------------------------------------------------------------------
 
 function stringField(data: Record<string, unknown>, key: string): string | undefined {
@@ -128,7 +129,7 @@ function findClosingFrontmatter(raw: string, start: number): { start: number; bo
 }
 
 function parseFrontmatter(raw: string): { data: Record<string, unknown>; body: string } | undefined {
-  // 去 BOM（U+FEFF），避免 Windows 编辑器带入的 BOM 让首行无法匹配 ---
+  // strip a leading BOM (U+FEFF) so the first line still matches ---
   if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1)
   const firstNl = raw.indexOf('\n')
   if (firstNl < 0) return undefined
@@ -158,7 +159,7 @@ class SuperpowersProvider implements SkillProvider {
 
   constructor(ctx: Context, _control: SkillProviderControl, config: Config) {
     if (config.providerName === RUNTIME_PROVIDER) {
-      throw new Error(`[superpowers] providerName "${RUNTIME_PROVIDER}" 为保留名，不可用`)
+      throw new Error(`[superpowers] providerName "${RUNTIME_PROVIDER}" is reserved`)
     }
     this.ctx = ctx
     this.name = config.providerName
@@ -200,7 +201,7 @@ class SuperpowersProvider implements SkillProvider {
       try {
         parsed = await parseSkillFile(skillPath)
       } catch (err) {
-        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: YAML 解析失败 — ${String(err)}`)
+        this.ctx.logger.warn(`[superpowers] skip ${skillPath}: YAML parse failed - ${String(err)}`)
         continue
       }
       if (!parsed) {
@@ -290,7 +291,7 @@ class SuperpowersProvider implements SkillProvider {
       return undefined
     }
     if (skillName !== candidate.name) {
-      // 名称漂移视为失效，触发上层 invalidate
+      // name drift between discovery and load
       this.ctx.logger.warn(`[superpowers] get ${candidate.name}: name drift "${skillName}" != "${candidate.name}"`)
       return undefined
     }
@@ -324,12 +325,12 @@ async function parseSkillFile(path: string): Promise<{ data: Record<string, unkn
 }
 
 // ---------------------------------------------------------------------------
-// 插件入口 — 所有副作用走 ctx 注册，随 fiber 卸载自动清理
+// plugin entrypoint - all side effects go through ctx and are cleaned up on fiber teardown
 // ---------------------------------------------------------------------------
 
 export function apply(ctx: Context, config: Config): void {
   if (config.providerName === RUNTIME_PROVIDER) {
-    throw new Error(`[superpowers] providerName "${RUNTIME_PROVIDER}" 为保留名，不可用`)
+    throw new Error(`[superpowers] providerName "${RUNTIME_PROVIDER}" is reserved`)
   }
 
   ctx.logger.info(`[superpowers] registering provider "${config.providerName}"`)
