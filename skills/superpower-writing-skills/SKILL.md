@@ -9,7 +9,7 @@ description: Use when creating new skills, editing existing skills, or verifying
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in your runtime's skills directory** (in DSH, the `skills/` directory of your workspace). Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias — see each runtime's documentation for its path.
+**Personal skills live in DSH's user skill directories** (`~/.dsh/skills/` or `~/.agents/skills/`). This repository's `skills/` directory is the superpowers plugin's bundled content (`source: bundled`), installed and uninstalled with the plugin — not the personal-skills directory. Codex, Copilot CLI, and Gemini CLI also recognize `~/.agents/skills/` as a cross-runtime alias — see each runtime's documentation for its path.
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
