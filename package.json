@@ -47,6 +47,11 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JasonFreeLab/dsh-superpowers.git"
+  },
+  "homepage": "https://github.com/JasonFreeLab/dsh-superpowers#readme",
   "engines": {
     "node": ">=20"
   },

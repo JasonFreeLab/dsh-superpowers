@@ -16,7 +16,7 @@ Using the `web` profile as the example (change `--profile` for other profiles). 
 
 ```sh
 # Local path install (dev / offline)
-git clone <this-repo> && cd dsh-superpowers
+git clone https://github.com/JasonFreeLab/dsh-superpowers.git && cd dsh-superpowers
 pnpm install && pnpm build
 dsh plugin --profile web add ./
 

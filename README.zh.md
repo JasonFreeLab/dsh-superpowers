@@ -16,7 +16,7 @@
 
 ```sh
 # 本地路径安装（开发/离线）
-git clone <this-repo> && cd dsh-superpowers
+git clone https://github.com/JasonFreeLab/dsh-superpowers.git && cd dsh-superpowers
 pnpm install && pnpm build
 dsh plugin --profile web add ./
 
