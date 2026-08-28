@@ -1,71 +1,73 @@
 # dsh-superpowers
 
-[obra/superpowers](https://github.com/obra/superpowers) 的 [DSH](https://github.com/deepseek-ai/deepseek-harness)（DeepSeek Harness）移植版 —— 把完整的多智能体软件开发方法论以**原生 DSH 技能**形式开箱即用。
+English | [中文](README.zh.md)
 
-> 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v6.3.0，作者 Jesse Vincent / Prime Radiant）。技能内容直接取自上游，并做了面向 DSH 工具集的映射。
+A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port of [obra/superpowers](https://github.com/obra/superpowers) — the full multi-agent software-development methodology, available out of the box as native DSH skills.
 
-## 是什么
+> Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v6.3.0, by Jesse Vincent / Prime Radiant). Skill content is taken directly from upstream and mapped onto the DSH toolset.
 
-一套**强制性方法论**而非可选建议：先头脑风暴 → 写计划切片 → TDD → 系统化调试 → 评审集成。14 个技能通过一个 `SkillProvider` 注入 `ctx.skills` 全局层，随 `dsh.bundle` 安装/卸载，不污染用户目录。
+## What it is
 
-## 安装
+A **mandatory methodology**, not optional advice: brainstorm → write sliced plans → TDD → systematic debugging → review and integrate. The 14 skills are injected into the global `ctx.skills` layer through a single `SkillProvider`, installed and uninstalled with the `dsh.bundle`, and never pollute the user directory.
 
-以主工作台 `web` 为例，其它 profile 改 `--profile` 后名字即可。前置：`Node >= 20`、`pnpm >= 9`、`dsh`。
+## Install
+
+Using the `web` profile as the example (change `--profile` for other profiles). Requires `Node >= 20`, `pnpm >= 9`, and `dsh`.
 
 ```sh
-# 本地路径安装（开发/离线）
+# Local path install (dev / offline)
 git clone <this-repo> && cd dsh-superpowers
 pnpm install && pnpm build
 dsh plugin --profile web add ./
 
-# 发布到 npm 后
+# After publishing to npm
 dsh plugin --profile web add dsh-superpowers
 
-# 验证：应能看到 id: superpowers 与包名
+# Verify: you should see id: superpowers and the package name
 dsh --profile web --dump-config | grep -A2 dsh-superpowers
 
-# 卸载
+# Uninstall
 dsh plugin --profile web remove dsh-superpowers
 ```
 
 ```sh
-# 更新
+# Update
 dsh plugin --profile web add dsh-superpowers
 ```
 
-## 包含技能（14 个）
+## Included skills (14)
 
-| 技能 | 触发时机 |
+| Skill | When it triggers |
 | --- | --- |
-| `superpower-using-superpowers` | 任意会话起点，先加载技能再回应 |
-| `superpower-brainstorming` | 任何创造性工作之前（新功能/组件/改行为） |
-| `superpower-writing-plans` | 有了规格/需求、动手写代码之前 |
-| `superpower-using-git-worktrees` | 需要隔离工作区或执行计划之前 |
-| `superpower-executing-plans` | 有书面实现计划要执行（带评审检查点） |
-| `superpower-subagent-driven-development` | 按计划逐任务派子代理执行 |
-| `superpower-dispatching-parallel-agents` | 面对 2+ 个互不依赖的独立任务 |
-| `superpower-test-driven-development` | 实现任何功能/修复之前（RED-GREEN-REFACTOR） |
-| `superpower-systematic-debugging` | 遇到任何 bug/测试失败/异常行为，提出修复之前 |
-| `superpower-verification-before-completion` | 宣称完成/已修复/通过之前，先跑验证拿证据 |
-| `superpower-requesting-code-review` | 完成任务/大功能/合并前请求评审 |
-| `superpower-receiving-code-review` | 收到评审反馈、动手实现建议之前 |
-| `superpower-finishing-a-development-branch` | 实现完成、测试通过，决定如何集成 |
-| `superpower-writing-skills` | 新建/编辑/验证技能之前 |
+| `superpower-using-superpowers` | Use when starting any conversation — establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions |
+| `superpower-brainstorming` | Use before any creative work — creating features, building components, adding functionality, or modifying behavior |
+| `superpower-writing-plans` | Use when you have a spec or requirements for a multi-step task, before touching code |
+| `superpower-using-git-worktrees` | Use when starting feature work that needs isolation from the current workspace, or before executing implementation plans |
+| `superpower-executing-plans` | Use when you have a written implementation plan to execute in a separate session with review checkpoints |
+| `superpower-subagent-driven-development` | Use when executing implementation plans with independent tasks in the current session |
+| `superpower-dispatching-parallel-agents` | Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies |
+| `superpower-test-driven-development` | Use when implementing any feature or bugfix, before writing implementation code |
+| `superpower-systematic-debugging` | Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes |
+| `superpower-verification-before-completion` | Use before claiming work is complete, fixed, or passing — run verification commands and confirm output before any success claim |
+| `superpower-requesting-code-review` | Use when completing tasks, implementing major features, or before merging |
+| `superpower-receiving-code-review` | Use when receiving code review feedback, before implementing suggestions |
+| `superpower-finishing-a-development-branch` | Use when implementation is complete, all tests pass, and you need to decide how to integrate the work |
+| `superpower-writing-skills` | Use when creating new skills, editing existing skills, or verifying skills work before deployment |
 
-典型流程：
+Typical flows:
 
 ```
-帮我做 XXX   → superpower-brainstorming → superpower-writing-plans
+Build me X    → superpower-brainstorming → superpower-writing-plans
               → superpower-subagent-driven-development
-修这个缺陷   → superpower-systematic-debugging
-帮我评审     → superpower-requesting-code-review
+Fix this bug  → superpower-systematic-debugging
+Review this   → superpower-requesting-code-review
 ```
 
-校验：进入会话后 `await ctx.skills.list({cwd})` 应有 14 条 `provider: superpowers`；或运行 `node scripts/verify.mjs` 得到 `14/14 PASS`。
+Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries with `provider: superpowers`; or run `node scripts/verify.mjs` for `14/14 PASS`.
 
-## 工具映射
+## Tool mapping
 
-obra 原文引用的是 Claude Code 工具，本包已映射到 DSH 工具（详见 `skills/superpower-using-superpowers/references/dsh-tools.md`）：
+Upstream references Claude Code tools; this package maps them onto DSH tools (see `skills/superpower-using-superpowers/references/dsh-tools.md`):
 
 | Claude Code | DSH |
 | --- | --- |
@@ -73,28 +75,28 @@ obra 原文引用的是 Claude Code 工具，本包已映射到 DSH 工具（详
 | Read / Write / Edit | `read` / `write` / `edit` |
 | Glob / Grep | `glob` / `grep` |
 | TodoWrite | `todo_write` |
-| Task（子代理） | `subagent` / `subagent_fork` |
+| Task (subagent) | `subagent` / `subagent_fork` |
 | ExitPlanMode | `exit_plan_mode` |
 | AskUserQuestion | `ask_user_question` |
 | WebFetch / WebSearch | `read_page` / `web_search` |
-| 加载技能 | `skill` 工具 / `/name` 手势 |
+| Load a skill | `skill` tool / `/name` gesture |
 
-## 目录结构
+## Layout
 
 ```
-src/superpowers.ts   # SkillProvider（rank 550），惰性加载 SKILL.md 正文
-skills/              # 14 个技能（英文原文，含 references/ 附属文档）
-lib/                 # 构建产物（提交后 GitHub 直装零构建）
-scripts/verify.mjs   # 结构校验 + 运行时冒烟（14/14 PASS）
-cordis.patch.yml     # bundle patch：insert superpowers 插件行
+src/superpowers.ts   # SkillProvider (rank 550), lazily loads SKILL.md bodies
+skills/              # 14 skills (English, with references/)
+lib/                 # build output (committed for zero-build GitHub installs)
+scripts/verify.mjs   # structural check + runtime smoke (14/14 PASS)
+cordis.patch.yml     # bundle patch: inserts the superpowers plugin row
 ```
 
-## 开发
+## Development
 
 ```sh
 pnpm install && pnpm build && pnpm typecheck && node scripts/verify.mjs
 ```
 
-## 协议
+## License
 
-MIT，与上游 [obra/superpowers](https://github.com/obra/superpowers) 保持一致（作者 Jesse Vincent / Prime Radiant）。详见 [LICENSE](./LICENSE)。
+MIT, matching upstream [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent / Prime Radiant). See [LICENSE](./LICENSE).
