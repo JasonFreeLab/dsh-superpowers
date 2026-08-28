@@ -1,50 +1,49 @@
-# 计划文档审查者提示词模板
+# Plan Document Reviewer Prompt Template
 
-在派发计划文档审查子代理时使用本模板。
+Use this template when dispatching a plan document reviewer subagent.
 
-**目的：** 验证计划是否完整、与规范一致，并且任务分解得当。
+**Purpose:** Verify the plan is complete, matches the spec, and has proper task decomposition.
 
-**派发时机：** 完整计划写完之后。
-
-使用 DSH 的 `subagent` 工具派发（默认后台运行；如果下一步依赖审查结果，设置 `run_in_background: false` 等待返回）：
+**Dispatch after:** The complete plan is written.
 
 ```
-subagent:
+Subagent (general-purpose):
   description: "Review plan document"
   prompt: |
-    你是一名计划文档审查者。验证这份计划是否完整、可以进入实现阶段。
+    You are a plan document reviewer. Verify this plan is complete and ready for implementation.
 
-    **待审查的计划：** [PLAN_FILE_PATH]
-    **用于参考的规范：** [SPEC_FILE_PATH]
+    **Plan to review:** [PLAN_FILE_PATH]
+    **Spec for reference:** [SPEC_FILE_PATH]
 
-    ## 检查什么
+    ## What to Check
 
-    | 类别 | 要查找的 |
-    |----------|----------|
-    | 完整性 | TODO、占位符、不完整的任务、缺失的步骤 |
-    | 规范对齐 | 计划覆盖规范需求，没有严重的范围蔓延 |
-    | 任务分解 | 任务边界清晰，步骤可执行 |
-    | 可构建性 | 工程师能否在不卡住的情况下照着这份计划做？ |
+    | Category | What to Look For |
+    |----------|------------------|
+    | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
+    | Spec Alignment | Plan covers spec requirements, no major scope creep |
+    | Task Decomposition | Tasks have clear boundaries, steps are actionable |
+    | Buildability | Could an engineer follow this plan without getting stuck? |
 
-    ## 校准
+    ## Calibration
 
-    **只标记那些会在实现阶段造成实际问题的问题。**
-    实现者构建出错误的东西或卡住，这是问题。
-    轻微措辞、风格偏好和"锦上添花"的建议不是问题。
+    **Only flag issues that would cause real problems during implementation.**
+    An implementer building the wrong thing or getting stuck is an issue.
+    Minor wording, stylistic preferences, and "nice to have" suggestions are not.
 
-    除非存在严重缺口——规范中缺失的需求、相互矛盾的步骤、占位内容、或含糊到无法执行的任务——否则予以通过。
+    Approve unless there are serious gaps — missing requirements from the spec,
+    contradictory steps, placeholder content, or tasks so vague they can't be acted on.
 
-    ## 输出格式
+    ## Output Format
 
-    ## 计划审查
+    ## Plan Review
 
-    **状态：** 通过 | 发现问题
+    **Status:** Approved | Issues Found
 
-    **问题（如有）：**
-    - [任务 X，步骤 Y]：[具体问题] - [它对实现为什么重要]
+    **Issues (if any):**
+    - [Task X, Step Y]: [specific issue] - [why it matters for implementation]
 
-    **建议（咨询性，不阻塞通过）：**
-    - [改进建议]
+    **Recommendations (advisory, do not block approval):**
+    - [suggestions for improvement]
 ```
 
-**审查者返回：** 状态、问题（如有）、建议
+**Reviewer returns:** Status, Issues (if any), Recommendations

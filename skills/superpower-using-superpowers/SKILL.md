@@ -1,58 +1,64 @@
 ---
 name: superpower-using-superpowers
-description: "在任何对话开始时使用——确立如何发现和使用技能，要求在任何回应（包括澄清性问题）之前调用技能。"
+description: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions
 ---
 
 <SUBAGENT-STOP>
-如果你是被派发出来执行特定任务的子代理，请忽略本技能。
+If you were dispatched as a subagent to execute a specific task, ignore this skill.
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
-如果你认为某技能有哪怕 1% 的可能适用于你正在做的事，你**绝对必须**调用该技能。
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
 
-如果某个技能适用于你的任务，你没有选择。你必须使用它。
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
-这一点没有商量余地。你不能通过合理化让自己绕开它。
+This is not negotiable. You cannot rationalize your way out of this.
 </EXTREMELY-IMPORTANT>
 
-## 规则
+## The Rule
 
-**在任何回应或行动之前调用相关或被请求的技能**——包括澄清性问题、探索代码库或检查文件。如果事后发现该技能并不适合当前情况，你可以不使用它。
+**Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
-**进入计划模式之前：** 如果你还没有做过头脑风暴（brainstorm），先用 `skill` 工具加载并调用 `superpower-brainstorming` 技能。
+**Before entering plan mode:** if you haven't already brainstormed, invoke the `superpower-brainstorming` skill first.
 
-然后宣布"正在使用 [技能名] 来完成 [目的]"，并严格遵循该技能。如果它有清单（checklist），用 `todo_write` 为每个清单项创建一条任务。
+Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
-## 技能优先级
+## Skill Priority
 
-当多个技能同时适用时，流程类技能优先——它们先确立方法，然后实现类技能（如前端设计等）来执行。头脑风暴（brainstorming）和系统性调试（systematic-debugging）是 Superpowers 最常见的流程技能，但这条规则适用于其中任何一个。
+When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. `superpower-brainstorming` and `superpower-systematic-debugging` are Superpowers' most common process skills, but the rule holds for any of them.
 
-- "我们来构建 X" → 先用 `superpower-brainstorming`，再用实现类技能。
-- "修复这个 bug" → 先用 `superpower-systematic-debugging`，再用领域技能。
+- "Let's build X" → superpower-brainstorming first, then implementation skills.
+- "Fix this bug" → superpower-systematic-debugging first, then domain skills.
 
-## 红旗信号（Red Flags）
+## Red Flags
 
-出现这些想法意味着 STOP——你正在合理化：
+These thoughts mean STOP—you're rationalizing:
 
-| 想法 | 现实 |
+| Thought | Reality |
 |---------|---------|
-| "这只是一个简单的问题" | 问题也是任务。检查是否有技能适用。 |
-| "我需要更多上下文" | 技能检查先于澄清性问题。 |
-| "让我先探索代码库" | 技能告诉你**如何**探索。先检查。 |
-| "我可以快速检查 git/文件" | 文件缺乏对话上下文。检查是否有技能适用。 |
-| "让我先收集信息" | 技能告诉你**如何**收集信息。 |
-| "这不需要正式技能" | 如果技能存在，就使用它。 |
-| "我记得这个技能" | 技能会演进。阅读当前版本。 |
-| "这不算任务" | 行动 = 任务。检查是否有技能适用。 |
-| "用这个技能大材小用了" | 简单的事会变得复杂。使用它。 |
-| "我就先做这一件事" | 在做任何事**之前**检查。 |
-| "这感觉很有成效" | 无纪律的行动浪费时间。技能能防止这一点。 |
-| "我知道那是什么意思" | 知道概念 ≠ 使用技能。调用它。 |
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
 
-## DSH 适配
+## Platform Adaptation
 
-DSH（DeepSeek Harness）的特殊说明见 `references/dsh-tools.md`（DSH 工具映射与技能加载方式）。
+If your harness appears here, read its reference file for special instructions:
 
-## 用户指令
+- DSH (DeepSeek Harness): `references/dsh-tools.md`
 
-用户指令（CLAUDE.md、AGENTS.md、GEMINI.md 等文件以及直接请求）优先于技能，技能又优先于默认行为。只有你的用户伙伴明确告诉你时，才可以跳过技能工作流或指令。
+(The per-harness reference files for Codex, Pi, Antigravity, and Hermes Agent are not bundled with DSH.)
+
+**Loading skills:** Skills are loaded via the `skill` tool — the model calls it with the exact skill name (e.g. `superpower-brainstorming`). Users can load a skill with the `/name` gesture, e.g. `/superpower-brainstorming`.
+
+## User Instructions
+
+User instructions (CLAUDE.md, AGENTS.md, GEMINI.md, etc, direct requests) take precedence over skills, which in turn override default behavior. Only skip skill workflows or instructions when your human partner has explicitly told you to.

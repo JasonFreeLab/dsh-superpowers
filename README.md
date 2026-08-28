@@ -83,7 +83,7 @@ obra 原文引用的是 Claude Code 工具，本包已映射到 DSH 工具（详
 
 ```
 src/superpowers.ts   # SkillProvider（rank 550），惰性加载 SKILL.md 正文
-skills/              # 14 个技能（中文，含 references/ 附属文档）
+skills/              # 14 个技能（英文原文，含 references/ 附属文档）
 lib/                 # 构建产物（提交后 GitHub 直装零构建）
 scripts/verify.mjs   # 结构校验 + 运行时冒烟（14/14 PASS）
 cordis.patch.yml     # bundle patch：insert superpowers 插件行
