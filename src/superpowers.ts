@@ -271,7 +271,13 @@ class SuperpowersProvider implements SkillProvider {
     if (raw === undefined) return undefined
 
     options.signal?.throwIfAborted()
-    const parsed = parseFrontmatter(raw)
+    let parsed
+    try {
+      parsed = parseFrontmatter(raw)
+    } catch (err) {
+      this.ctx.logger.warn(`[superpowers] get ${candidate.name}: frontmatter parse failed (${String(err)})`)
+      return undefined
+    }
     if (!parsed) {
       this.ctx.logger.warn(`[superpowers] get ${candidate.name}: missing or invalid frontmatter`)
       return undefined
