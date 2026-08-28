@@ -9,7 +9,7 @@ description: "在创建新技能、编辑现有技能或在部署前验证技能
 
 **编写技能就是把测试驱动开发（TDD）应用到流程文档上。**
 
-**个人技能存放在 DSH 的技能目录**（本仓库的 `skills/` 目录，每个技能一个 `superpower-<skill>/` 目录，内含 `SKILL.md`）。
+**个人技能存放在 DSH 的用户技能目录**（`~/.dsh/skills/` 或 `~/.agents/skills/`，每个技能一个 `<name>/SKILL.md`）。本仓库的 `skills/` 目录是本插件（superpowers provider）的内置内容（source `bundled`），随插件安装/卸载，不是个人技能目录。
 
 你先写测试用例（带压力的子代理场景），看它们失败（基线行为），再写技能（文档），看测试通过（代理遵守），然后重构（堵上漏洞）。
 
