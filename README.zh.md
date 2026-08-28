@@ -65,6 +65,13 @@ dsh plugin --profile web add dsh-superpowers
 
 校验：进入会话后 `await ctx.skills.list({cwd})` 应有 14 条 `provider: superpowers`；或运行 `node scripts/verify.mjs` 得到 `14/14 PASS`。
 
+## 在 DSH web 界面中使用
+
+1. 启动 web 界面并打开打印出的地址：`dsh web`（即 `dsh --profile web`）。
+2. 新建会话。14 个技能会自动注册到 `ctx.skills`，并出现在模型的 `<available_skills>` 目录里——无需额外配置。
+3. 模型会通过 `skill` 工具自行加载匹配的技能：「帮我做 XXX」→ `superpower-brainstorming`，「修这个缺陷」→ `superpower-systematic-debugging`。
+4. 你也可以在聊天框输入技能名前加 `/` 来显式调用，例如 `/superpower-brainstorming`（会把该技能的完整指令注入对话）。
+
 ## 工具映射
 
 obra 原文引用的是 Claude Code 工具，本包已映射到 DSH 工具（详见 `skills/superpower-using-superpowers/references/dsh-tools.md`）：

@@ -65,6 +65,13 @@ Review this   → superpower-requesting-code-review
 
 Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries with `provider: superpowers`; or run `node scripts/verify.mjs` for `14/14 PASS`.
 
+## Usage in the DSH web UI
+
+1. Start the web UI and open the printed URL: `dsh web` (alias of `dsh --profile web`).
+2. Start a new session. The 14 skills are registered automatically in `ctx.skills` and appear in the model's `<available_skills>` catalog — no extra setup.
+3. The model loads the matching skill by itself via the `skill` tool: "build me X" → `superpower-brainstorming`, "fix this bug" → `superpower-systematic-debugging`.
+4. You can also invoke a skill explicitly by typing its name with a leading slash in the chat, e.g. `/superpower-brainstorming` (this injects the skill's full instructions into the conversation).
+
 ## Tool mapping
 
 Upstream references Claude Code tools; this package maps them onto DSH tools (see `skills/superpower-using-superpowers/references/dsh-tools.md`):
