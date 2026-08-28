@@ -1,6 +1,6 @@
 # dsh-superpowers bundle patch.
-# Install with `dsh plugin --profile <name> add dsh-superpowers`; this patch is
+# Install with `dsh plugin --profile <name> add @jasonfreelab/dsh-superpowers`; this patch is
 # then merged into the profile's composition to inject the superpowers skill provider.
 - insert:
     - id: superpowers
-      name: dsh-superpowers
+      name: "@jasonfreelab/dsh-superpowers"

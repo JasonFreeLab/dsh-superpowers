@@ -1,5 +1,5 @@
 {
-  "name": "dsh-superpowers",
+  "name": "@jasonfreelab/dsh-superpowers",
   "version": "0.1.0",
   "description": "A DSH port of obra/superpowers — the full multi-agent software-development methodology (TDD, planning, debugging, review) as native DSH skills",
   "type": "module",
@@ -44,6 +44,9 @@
     "@types/node": "^22.0.0"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },

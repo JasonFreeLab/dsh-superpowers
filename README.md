@@ -21,18 +21,18 @@ pnpm install && pnpm build
 dsh plugin --profile web add ./
 
 # After publishing to npm
-dsh plugin --profile web add dsh-superpowers
+dsh plugin --profile web add @jasonfreelab/dsh-superpowers
 
 # Verify: you should see id: superpowers and the package name
-dsh --profile web --dump-config | grep -A2 dsh-superpowers
+dsh --profile web --dump-config | grep -A2 @jasonfreelab/dsh-superpowers
 
 # Uninstall
-dsh plugin --profile web remove dsh-superpowers
+dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 ```
 
 ```sh
 # Update
-dsh plugin --profile web add dsh-superpowers
+dsh plugin --profile web add @jasonfreelab/dsh-superpowers
 ```
 
 ## Included skills (14)

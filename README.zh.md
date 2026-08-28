@@ -21,18 +21,18 @@ pnpm install && pnpm build
 dsh plugin --profile web add ./
 
 # 发布到 npm 后
-dsh plugin --profile web add dsh-superpowers
+dsh plugin --profile web add @jasonfreelab/dsh-superpowers
 
 # 验证：应能看到 id: superpowers 与包名
-dsh --profile web --dump-config | grep -A2 dsh-superpowers
+dsh --profile web --dump-config | grep -A2 @jasonfreelab/dsh-superpowers
 
 # 卸载
-dsh plugin --profile web remove dsh-superpowers
+dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 ```
 
 ```sh
 # 更新
-dsh plugin --profile web add dsh-superpowers
+dsh plugin --profile web add @jasonfreelab/dsh-superpowers
 ```
 
 ## 包含技能（14 个）
