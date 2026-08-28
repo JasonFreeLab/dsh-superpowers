@@ -5,6 +5,16 @@
   "type": "module",
   "main": "lib/superpowers.js",
   "types": "lib/superpowers.d.ts",
+  "readme": "README.md",
+  "author": "JasonFreeLab",
+  "exports": {
+    ".": {
+      "types": "./lib/superpowers.d.ts",
+      "default": "./lib/superpowers.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
   "files": [
     "lib/",
     "skills/",
@@ -21,7 +31,8 @@
     "prepare": "npm run build",
     "verify": "node scripts/verify.mjs",
     "test": "node scripts/test.mjs",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "prepublishOnly": "node --check lib/superpowers.js"
   },
   "dsh": {
     "bundle": {
@@ -52,6 +63,9 @@
     "url": "git+https://github.com/JasonFreeLab/dsh-superpowers.git"
   },
   "homepage": "https://github.com/JasonFreeLab/dsh-superpowers#readme",
+  "bugs": {
+    "url": "https://github.com/JasonFreeLab/dsh-superpowers/issues"
+  },
   "engines": {
     "node": ">=20"
   },
