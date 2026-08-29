@@ -2,6 +2,8 @@
 
 [English](README.md) | 中文
 
+[![npm version](https://img.shields.io/npm/v/@jasonfreelab/dsh-superpowers)](https://www.npmjs.com/package/@jasonfreelab/dsh-superpowers) [![GitHub release](https://img.shields.io/github/v/release/JasonFreeLab/dsh-superpowers)](https://github.com/JasonFreeLab/dsh-superpowers/releases) [![License](https://img.shields.io/npm/l/@jasonfreelab/dsh-superpowers)](./LICENSE)
+
 [obra/superpowers](https://github.com/obra/superpowers) 的 [DSH](https://github.com/deepseek-ai/deepseek-harness)（DeepSeek Harness）移植版 —— 把完整的多智能体软件开发方法论以**原生 DSH 技能**形式开箱即用。
 
 > 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v6.3.0，作者 Jesse Vincent / Prime Radiant）。技能内容直接取自上游，并做了面向 DSH 工具集的映射。

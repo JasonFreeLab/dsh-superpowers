@@ -2,6 +2,8 @@
 
 English | [中文](README.zh.md)
 
+[![npm version](https://img.shields.io/npm/v/@jasonfreelab/dsh-superpowers)](https://www.npmjs.com/package/@jasonfreelab/dsh-superpowers) [![GitHub release](https://img.shields.io/github/v/release/JasonFreeLab/dsh-superpowers)](https://github.com/JasonFreeLab/dsh-superpowers/releases) [![License](https://img.shields.io/npm/l/@jasonfreelab/dsh-superpowers)](./LICENSE)
+
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port of [obra/superpowers](https://github.com/obra/superpowers) — the full multi-agent software-development methodology, available out of the box as native DSH skills.
 
 > Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v6.3.0, by Jesse Vincent / Prime Radiant). Skill content is taken directly from upstream and mapped onto the DSH toolset.
