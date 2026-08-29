@@ -6,7 +6,6 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
   packages: write
   id-token: write
 
@@ -15,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -35,25 +32,5 @@ jobs:
         run: |
           echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > .npmrc
           npm publish --registry=https://npm.pkg.github.com/
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate release notes
-        run: |
-          PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
-          if [ -n "$PREV" ]; then RANGE="$PREV..HEAD"; else RANGE="HEAD"; fi
-          {
-            echo "## What's Changed"
-            echo ""
-            git log --pretty=format:'- %s' "$RANGE"
-            if [ -n "$PREV" ]; then
-              echo ""
-              echo ""
-              echo "**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/$PREV...$GITHUB_REF_NAME"
-            fi
-          } > release-notes.md
-
-      - name: Create GitHub Release
-        run: gh release create "$GITHUB_REF_NAME" --notes-file release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

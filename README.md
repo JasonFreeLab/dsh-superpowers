@@ -8,36 +8,69 @@ A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port
 
 > Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v6.3.0, by Jesse Vincent / Prime Radiant). Skill content is taken directly from upstream and mapped onto the DSH toolset.
 
-## What it is
+## Table of Contents
 
-A **mandatory methodology**, not optional advice: brainstorm → write sliced plans → TDD → systematic debugging → review and integrate. The 14 skills are injected into the global `ctx.skills` layer through a single `SkillProvider`, installed and uninstalled with the `dsh.bundle`, and never pollute the user directory.
+- [Features](#features)
+- [Install](#install)
+- [Usage](#usage)
+- [Included skills](#included-skills)
+- [Tool mapping](#tool-mapping)
+- [Layout](#layout)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- **14 methodology skills** — brainstorm → plan → TDD → systematic debugging → code review → integrate.
+- **Native DSH skills** — injected into `ctx.skills` via a `SkillProvider` (rank 550; overridable by project/user skills).
+- **English (i18n)** — skill content kept in original English; Chinese docs in `README.zh.md`.
+- **Zero-build install** — `lib/` is committed, so GitHub installs need no build step.
+- **Automated releases** — `release-please` (versioning + CHANGELOG + release notes) plus trusted publishing to npm and GitHub Packages.
 
 ## Install
 
-Using the `web` profile as the example (change `--profile` for other profiles). Requires `Node >= 20`, `pnpm >= 9`, and `dsh`.
+Using the `web` profile as the example (change `--profile` for others). Requires `Node >= 20`, `pnpm >= 9`, and `dsh`.
 
 ```sh
+# From npm (recommended)
+dsh plugin --profile web add @jasonfreelab/dsh-superpowers
+
 # Local path install (dev / offline)
 git clone https://github.com/JasonFreeLab/dsh-superpowers.git && cd dsh-superpowers
 pnpm install && pnpm build
 dsh plugin --profile web add ./
 
-# After publishing to npm
+# Verify: you should see id: superpowers
+dsh --profile web --dump-config | grep -A2 '@jasonfreelab/dsh-superpowers'
+
+# Update / uninstall
 dsh plugin --profile web add @jasonfreelab/dsh-superpowers
-
-# Verify: you should see id: superpowers and the package name
-dsh --profile web --dump-config | grep -A2 @jasonfreelab/dsh-superpowers
-
-# Uninstall
 dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 ```
 
-```sh
-# Update
-dsh plugin --profile web add @jasonfreelab/dsh-superpowers
+> Also published to GitHub Packages (requires auth): `npm.pkg.github.com/@jasonfreelab/dsh-superpowers`.
+
+## Usage
+
+### In the DSH web UI
+
+1. Start the web UI and open the printed URL: `dsh web` (alias of `dsh --profile web`).
+2. Start a new session. The 14 skills are registered automatically in `ctx.skills` and appear in the model's `<available_skills>` catalog — no extra setup.
+3. The model loads the matching skill by itself via the `skill` tool.
+4. You can also invoke a skill explicitly with `/skill-name`, e.g. `/superpower-brainstorming`.
+
+### Typical flows
+
+```
+Build me X    → superpower-brainstorming → superpower-writing-plans → superpower-subagent-driven-development
+Fix this bug  → superpower-systematic-debugging
+Review this   → superpower-requesting-code-review
 ```
 
-## Included skills (14)
+Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries with `provider: superpowers`.
+
+## Included skills
 
 | Skill | When it triggers |
 | --- | --- |
@@ -55,24 +88,6 @@ dsh plugin --profile web add @jasonfreelab/dsh-superpowers
 | `superpower-receiving-code-review` | Use when receiving code review feedback, before implementing suggestions |
 | `superpower-finishing-a-development-branch` | Use when implementation is complete, all tests pass, and you need to decide how to integrate the work |
 | `superpower-writing-skills` | Use when creating new skills, editing existing skills, or verifying skills work before deployment |
-
-Typical flows:
-
-```
-Build me X    → superpower-brainstorming → superpower-writing-plans
-              → superpower-subagent-driven-development
-Fix this bug  → superpower-systematic-debugging
-Review this   → superpower-requesting-code-review
-```
-
-Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries with `provider: superpowers`; or run `node scripts/verify.mjs` for `14/14 PASS`.
-
-## Usage in the DSH web UI
-
-1. Start the web UI and open the printed URL: `dsh web` (alias of `dsh --profile web`).
-2. Start a new session. The 14 skills are registered automatically in `ctx.skills` and appear in the model's `<available_skills>` catalog — no extra setup.
-3. The model loads the matching skill by itself via the `skill` tool: "build me X" → `superpower-brainstorming`, "fix this bug" → `superpower-systematic-debugging`.
-4. You can also invoke a skill explicitly by typing its name with a leading slash in the chat, e.g. `/superpower-brainstorming` (this injects the skill's full instructions into the conversation).
 
 ## Tool mapping
 
@@ -93,19 +108,28 @@ Upstream references Claude Code tools; this package maps them onto DSH tools (se
 ## Layout
 
 ```
-src/superpowers.ts   # SkillProvider (rank 550), lazily loads SKILL.md bodies
-skills/              # 14 skills (English, with references/)
-lib/                 # build output (committed for zero-build GitHub installs)
-scripts/verify.mjs   # structural check + runtime smoke (14/14 PASS)
-cordis.patch.yml     # bundle patch: inserts the superpowers plugin row
+src/superpowers.ts       # SkillProvider (rank 550), lazily loads SKILL.md bodies
+skills/                  # 14 skills (English, with references/)
+lib/                     # build output (committed for zero-build installs)
+scripts/                 # test.mjs + verify.mjs
+cordis.patch.yml         # bundle patch
+.github/workflows/       # ci.yml + release.yml + release-please.yml
 ```
 
 ## Development
 
 ```sh
-pnpm install && pnpm build && pnpm typecheck && node scripts/verify.mjs
+pnpm install
+npm run build        # or: pnpm build
+npm run typecheck
+npm test             # comprehensive (content hygiene + real SkillRegistry)
+npm run verify       # structural + runtime smoke
 ```
+
+## Contributing
+
+Issues and pull requests are welcome. The upstream methodology lives in [obra/superpowers](https://github.com/obra/superpowers).
 
 ## License
 
-MIT, matching upstream [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent / Prime Radiant). See [LICENSE](./LICENSE).
+[MIT](./LICENSE), matching upstream [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent / Prime Radiant).
