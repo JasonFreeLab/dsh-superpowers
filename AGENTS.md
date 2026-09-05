@@ -1,4 +1,4 @@
-# dsh.md
+# AGENTS.md
 
 This repository is a DSH plugin that ports the obra/superpowers skills.
 
