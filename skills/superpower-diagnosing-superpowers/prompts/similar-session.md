@@ -23,16 +23,15 @@ Procedure:
    extract trimmed fields from the specific lines. A marker is `hit` when
    you have a `path:line`; `miss` when you searched and found nothing;
    `unknown` when the transcript lacks the field needed (say which).
-3. Return exactly:
+3. Return the structured result your dispatcher's schema expects:
 
-```
-candidate: <session id> — <absolute path>
-identity: <harness> <version>, <first timestamp>, "<first prompt, 100 chars>"
-match: yes | partial | no
-markers:
-- <marker>: hit — <path>:<line> — "<quote ≤ 120 chars>"
-- <marker>: miss — checked <what>
-- <marker>: unknown — <missing field>
-```
+- sessionId: the candidate's session id
+- path: its absolute path
+- identity: `<harness> <version>, <first timestamp>, "<first prompt, 100 chars>"`
+- match: yes | partial | no
+- markers: one entry per marker, each with `marker`, `verdict`
+  (hit | miss | unknown), and `evidence`: for `hit`, a
+  `<absolute path>:<line> — "<quote ≤ 120 chars>"` citation; for `miss`,
+  what you checked; for `unknown`, the missing field
 
 `yes` = every marker hit; `partial` = at least one hit; `no` = none.

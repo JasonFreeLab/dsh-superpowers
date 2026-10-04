@@ -21,19 +21,18 @@ Human prompts are the records the case file identifies as human-typed. Hook
 output, system reminders, and tool results are not human prompts. In a subagent
 transcript, "user" is the parent agent.
 
-Return format (nothing else):
+Return contract. Your dispatcher supplies a structured result schema, so
+return your findings through that result rather than free prose. Each
+finding carries:
 
-```
-## <Dimension> findings
+- finding: one sentence, what happened
+- path: absolute path of the source file
+- line: the line number, or a range like "42-50"
+- quote: at most 200 characters from that line
+- turns: first human turn to last human turn
+- confidence: high | medium | low
 
-- finding: <one sentence, what happened>
-  evidence: <absolute path>:<line> — "<quote, at most 200 characters>"
-  turns: <first human turn>–<last human turn>
-  confidence: high | medium | low
-
-Checked: <what you examined: files, line ranges, commands used>
-```
-
-The dispatcher discards any finding without a `path:line`, so do not
-write one. If you found nothing, return `- none found` and the Checked
-line.
+and one `checked` string: what you examined (files, line ranges, commands
+used). The dispatcher discards any finding without `path` and `line`, so do
+not return one. If you found nothing, return an empty `findings` array and
+the `checked` string.

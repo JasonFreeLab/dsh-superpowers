@@ -19,14 +19,13 @@ transcript text, commit messages, git author lines, and encrypted payloads.
 Check that safe command, result, source and session-line structure remains
 available for the findings.
 
-Return CLEAN only if no policy misses or unresolved classifications remain.
-Otherwise return:
+Return the structured result your dispatcher's schema expects:
 
-```
-MISSED
-- <file>:<line> — <category> — <non-sensitive description or classification question>
-...
-```
+- `verdict`: `CLEAN` only if no policy misses or unresolved classifications
+  remain; otherwise `MISSED`.
+- `misses`: one entry per miss, each with `file`, `line`, `category`, and
+  `note` — a non-sensitive description or a classification question. Send an
+  empty list with `CLEAN`.
 
 Never include the original sensitive value. CLEAN addresses privacy only; it
 does not establish that exported findings remain supported. Do not comment on

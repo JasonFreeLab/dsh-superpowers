@@ -36,15 +36,16 @@ every call). Steps 5–7 run only on their stated condition.
    partner the path, and fill `templates/case.md` there, following its
    provenance rules for environment and skill observations.
 3. **Triage.** Read the region around the reported problem yourself. Then
-   dispatch one analyst subagent per dimension in parallel with the DSH
-   `subagent` tool (background by default; you are notified as each one
-   finishes), or use `workflow` for a scripted parallel fan-out. Give each
-   analyst the case file path, `prompts/analyst-common.md`, and one dimension
-   file from `prompts/`: `skill-timeline.md`,
-   `plan-adherence.md`, `repeated-work.md`, `stumbles.md`,
-   `quality-evidence.md`, `request-conflicts.md`, `cost-and-time.md`.
-   Split a dimension by turn range when the transcript is long. Discard
-   any returned finding without `path:line`.
+   run the schema-validated analyst fan-out with the DSH `workflow` tool —
+   Script 1 in `references/workflow-orchestration.md` runs one `agent()` per
+   dimension in parallel and returns structured findings whose required
+   `path` and `line` fields enforce "no citation, no finding". Pass the skill
+   base directory, the case file path, and an optional turn range through
+   `args`. Split a dimension by turn range with `args.range` when the
+   transcript is long. If `workflow` is unavailable, fall back to `subagent`
+   dispatches of `prompts/analyst-common.md` plus `prompts/<dimension>.md`,
+   and discard any finding without `path:line`. A `null` agent result is a
+   failed analyst: re-run it, never read it as "no findings".
 4. **Report.** Fill every section of `templates/report.md` in order, write
    it to the workspace with the `write` tool, show it, and give the path.
    Check what cited content actually proves and preserve the supporting case;
@@ -61,8 +62,11 @@ every call). Steps 5–7 run only on their stated condition.
    scrubbed bundle is available on request, then wait. Ask the redaction
    level, stating what each includes: skeleton (no tool-result bodies),
    evidence (bodies only for cited events), full. Build the bundle per
-   `templates/bundle-README.md`, dispatch `prompts/scrub.md`, then
-   `prompts/scrub-audit.md`, repeating both until the audit returns CLEAN.
+   `templates/bundle-README.md`, then run Script 3 in
+   `references/workflow-orchestration.md`: it scrubs via `prompts/scrub.md`,
+   audits via `prompts/scrub-audit.md`, and repeats both until the audit
+   returns CLEAN or the round cap is reached. Persist the returned
+   per-dimension findings to `findings/<dimension>.md` while building.
    Complete the bundle template's evidence check and reconciliation before
    showing the final scrub log, file list, and privacy and evidence outcomes.
    Archive it (`tar -czf`; `zip` may not be installed) only after approval.
@@ -71,8 +75,9 @@ every call). Steps 5–7 run only on their stated condition.
    file before sharing.
 7. **Similar sessions** — when asked. Turn confirmed findings into a
    signature, list candidates by mtime and size, find marker line numbers,
-   dispatch `prompts/similar-session.md` per candidate in parallel, and
-   append report §9.
+   run the matcher fan-out with Script 2 in
+   `references/workflow-orchestration.md` (one schema-validated matcher per
+   candidate, in parallel), and append report §9.
 
 ## Quick reference
 
@@ -94,7 +99,12 @@ yourself in step 3 and which findings to lead with in the verdict.
   `references/context-safety.md` on every session file, every time.
 - **Read-only.** Never modify, move, or delete a session file.
 - **Exact paths to subagents.** A subagent's "current session" is its
-  own. Pass absolute paths and ids.
+  own. Pass absolute paths and ids. The `workflow` scripts need the
+  absolute skill base directory to hand each agent its prompt file.
+- **Structured results.** The `workflow` fan-outs return schema-validated
+  objects. A `null` agent result is a failed analyst or matcher: re-run
+  it. Never read null as "none found", and never render a finding the
+  schema would not have accepted.
 - **Human prompts only.** Hook output, system reminders, and tool results
   are not your partner's words. In a subagent transcript, "user" is the
   parent agent.

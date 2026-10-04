@@ -26,4 +26,7 @@ Procedure:
    excluding `scrub-log.md`. Write `BUNDLE/scrub-log.md` as a table of
    placeholder → category → count. Never write a plaintext replacement map or
    an original value into the log.
-4. Return the scrub-log table and the list of files rewritten. Nothing else.
+4. Return the structured result your dispatcher's schema expects:
+   `filesRewritten` — the absolute paths you rewrote — and `logPath` — the
+   path of `BUNDLE/scrub-log.md`. The placeholder table stays in the log
+   file; do not paste it into the result.
