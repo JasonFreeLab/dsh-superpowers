@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/JasonFreeLab/dsh-superpowers/compare/v0.3.0...v0.3.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **deps:** require DSH 0.2.0-rc.2 peer versions ([5c33ee7](https://github.com/JasonFreeLab/dsh-superpowers/commit/5c33ee7919a85ddae5d026322fd26b075fdab09c))
+
 ## [0.3.0](https://github.com/JasonFreeLab/dsh-superpowers/compare/v0.2.0...v0.3.0) (2026-10-04)
 
 
