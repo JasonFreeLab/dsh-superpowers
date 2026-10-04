@@ -12,17 +12,17 @@
  */
 import type { Context } from '@deepseek-ai/cordis';
 import Schema from '@deepseek-ai/schemastery';
-export declare const Config: Schema<Schemastery.ObjectS<{
+export declare const Config: Schema<Schemastery.ObjectS<NoInfer<{
     /** provider name registered on ctx.skills; defaults to superpowers; 'runtime' is reserved */
-    providerName: Schema<string, string>;
+    providerName: Schema<string, string, "defined">;
     /** absolute skill directory; defaults to the package's skills/; useful for local debugging */
-    skillDir: Schema<string, string>;
-}>, Schemastery.ObjectT<{
+    skillDir: Schema<string, string, "plain">;
+}>>, Schemastery.ObjectT<NoInfer<{
     /** provider name registered on ctx.skills; defaults to superpowers; 'runtime' is reserved */
-    providerName: Schema<string, string>;
+    providerName: Schema<string, string, "defined">;
     /** absolute skill directory; defaults to the package's skills/; useful for local debugging */
-    skillDir: Schema<string, string>;
-}>>;
+    skillDir: Schema<string, string, "plain">;
+}>>, "plain">;
 export interface Config {
     providerName: string;
     skillDir?: string;
@@ -33,17 +33,17 @@ export declare function apply(ctx: Context, config: Config): void;
 declare const _default: {
     name: string;
     inject: readonly ["skills"];
-    Config: Schema<Schemastery.ObjectS<{
+    Config: Schema<Schemastery.ObjectS<NoInfer<{
         /** provider name registered on ctx.skills; defaults to superpowers; 'runtime' is reserved */
-        providerName: Schema<string, string>;
+        providerName: Schema<string, string, "defined">;
         /** absolute skill directory; defaults to the package's skills/; useful for local debugging */
-        skillDir: Schema<string, string>;
-    }>, Schemastery.ObjectT<{
+        skillDir: Schema<string, string, "plain">;
+    }>>, Schemastery.ObjectT<NoInfer<{
         /** provider name registered on ctx.skills; defaults to superpowers; 'runtime' is reserved */
-        providerName: Schema<string, string>;
+        providerName: Schema<string, string, "defined">;
         /** absolute skill directory; defaults to the package's skills/; useful for local debugging */
-        skillDir: Schema<string, string>;
-    }>>;
+        skillDir: Schema<string, string, "plain">;
+    }>>, "plain">;
     apply: typeof apply;
 };
 export default _default;
