@@ -9,7 +9,7 @@ import plugin from '../lib/superpowers.js'
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '..')
 const skillsDir = join(root, 'skills')
-const EXPECTED = 14
+const EXPECTED = 15
 const NL = String.fromCharCode(10)
 
 let failures = 0

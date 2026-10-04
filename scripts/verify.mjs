@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '..')
 const skillsDir = join(root, 'skills')
-const EXPECTED = 14
+const EXPECTED = 15
 const NL = String.fromCharCode(10)
 const CR = String.fromCharCode(13)
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
