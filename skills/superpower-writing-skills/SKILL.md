@@ -372,6 +372,8 @@ pptx/
 ```
 When: Reference material too large for inline
 
+Invoke bundled scripts through their interpreter in the prose (`bash scripts/tool.sh`, `node scripts/tool.js`), never by bare path: some harness plugin packagers strip executable bits, and a bare `scripts/tool.sh` fails there with `Permission denied`. (In DSH the bundled scripts of this port are written as inline `bash` equivalents for the same reason — see superpower-subagent-driven-development.)
+
 ## The Iron Law (Same as TDD)
 
 ```

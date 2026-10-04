@@ -36,25 +36,25 @@ stop and ask.
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
     "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
+    "Partner chose inline, or no subagent tool?" [shape=diamond];
     "superpower-subagent-driven-development" [shape=box];
     "superpower-executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
+    "Tasks mostly independent?" -> "Partner chose inline, or no subagent tool?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "superpower-subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "superpower-executing-plans" [label="no - parallel session"];
+    "Partner chose inline, or no subagent tool?" -> "superpower-executing-plans" [label="yes"];
+    "Partner chose inline, or no subagent tool?" -> "superpower-subagent-driven-development" [label="no"];
 }
 ```
 
-**vs. Executing Plans (parallel session) — superpower-executing-plans:**
-- Same session (no context switch)
-- Fresh subagent per task (no context pollution)
-- Review after each task (spec compliance + code quality), broad review at the end
-- Faster iteration (no human-in-loop between tasks)
+**vs. Executing Plans (inline) — superpower-executing-plans:**
+- Fresh subagent per task (no context pollution) instead of one context doing every task
+- Review after each task (spec compliance + code quality) instead of only at the end
+- Costs a fresh context per task and per review; inline costs one context plus one final reviewer
+- Both run in this session, share the same plan workspace and ledger, and never pause between tasks
 
 ## The Process
 
@@ -137,16 +137,32 @@ a ledger file, not only in todos.
   `scripts/sdd-workspace PLAN_FILE` for this; DSH does not bundle it — run
   the equivalent inline via `bash`:
   ```bash
-  # Prints the plan's git-ignored directory
+  # plan=PLAN_FILE; prints the plan's git-ignored directory
   # (<repo-root>/.superpowers/sdd/<plan-basename>/), home to every artifact
   # for THIS plan: ledger, briefs, reports, review packages.
-  workspace="$(git rev-parse --show-toplevel)/.superpowers/sdd/$(basename PLAN_FILE .md)"
-  mkdir -p "$workspace"
-  printf '*
-' > "$(git rev-parse --show-toplevel)/.superpowers/sdd/.gitignore"  # self-ignoring
-  echo "$workspace"
+  root="$(git rev-parse --show-toplevel)"; base="$root/.superpowers/sdd"
+  slug="$(basename "$plan" .md)"
+  plan_dir="$(CDPATH= cd -- "$(dirname "$plan")" && pwd -P)"
+  plan_abs="$plan_dir/$(basename "$plan")"
+  case "$plan_abs" in "$root"/*) plan_id="${plan_abs#"$root"/}" ;; *) plan_id="$plan_abs" ;; esac
+  owns() { # $1 = candidate dir; a plan-path marker settles ownership
+    if [ -e "$1/plan-path" ]; then [ "$(cat "$1/plan-path")" = "$plan_id" ]
+    else mkdir -p "$1"; printf '%s\n' "$plan_id" > "$1/plan-path"; fi
+  }
+  dir="$base/$slug"
+  if ! owns "$dir"; then
+    parent="$(basename "$plan_dir")"; dir="$base/$slug-$parent"
+    if ! owns "$dir"; then n=2; while ! owns "$base/$slug-$parent-$n"; do n=$((n+1)); done; dir="$base/$slug-$parent-$n"; fi
+  fi
+  printf '*\n' > "$base/.gitignore"    # self-ignoring
+  printf '%s\n' "$dir"
   ```
-  Another plan's directory is never yours to read or write.
+  This mirrors upstream's collision rule: two plans whose filenames match
+  (`docs/alpha/plan.md` vs `docs/beta/plan.md`) get separate directories,
+  each recording its owning plan in a `plan-path` marker. A workspace with
+  no marker predates the marker scheme and is adopted by the first plan to
+  claim it, so in-flight workspaces keep resolving. Another plan's
+  directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
   — do not re-dispatch them; resume at the first task without one. A task
@@ -258,14 +274,22 @@ inline via `bash`:
   context to a file the reviewer reads in one call. Using the recorded
   per-task BASE (not `HEAD~1`) keeps multi-commit tasks intact. The output
   never enters your own context, and the reviewer sees everything in one
-  `read` call:
+  `read` call. The range guards reject an empty or non-descendant
+  `BASE..HEAD` (exit 3), so an implementer that committed to the wrong
+  branch cannot produce a "clean" review of nothing:
   ```bash
-  out="$workspace/review-$(git rev-parse --short BASE)..$(git rev-parse --short HEAD).diff"
-  { echo "# Review package: BASE..HEAD"; echo
-    echo "## Commits"; git log --oneline BASE..HEAD; echo
-    echo "## Files changed"; git diff --stat BASE..HEAD; echo
-    echo "## Diff"; git diff -U10 BASE..HEAD; } > "$out"
-  echo "wrote $out"
+  # plan=PLAN_FILE; base=BASE; head=HEAD; workspace=<from Setup>
+  [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+  git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+  git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+  git merge-base --is-ancestor "$base" "$head" || { echo "HEAD is not a descendant of BASE: ${base}..${head}" >&2; exit 3; }
+  [ "$(git rev-list --count "${base}..${head}")" -gt 0 ] || { echo "empty commit range: ${base}..${head}" >&2; exit 3; }
+  out="$workspace/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  { echo "# Review package: ${base}..${head}"; echo
+    echo "## Commits"; git log --oneline "${base}..${head}"; echo
+    echo "## Files changed"; git diff --stat "${base}..${head}"; echo
+    echo "## Diff"; git diff -U10 "${base}..${head}"; } > "$out"
+  echo "wrote ${out}: $(git rev-list --count "${base}..${head}") commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
   ```
 - **Task brief** (upstream `scripts/task-brief PLAN_FILE N`): extract one
   task's full text to a uniquely named file the implementer reads in one
