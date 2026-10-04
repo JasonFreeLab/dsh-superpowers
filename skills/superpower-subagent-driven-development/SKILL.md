@@ -229,13 +229,16 @@ the implementer that got stuck.
 
 **Always specify the model explicitly when dispatching a subagent.** An
 omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section. (DSH note: the
-`subagent` and `subagent_fork` tools take no per-call model argument —
-the model tier is set by your session/harness configuration. Where the
-platform lets you pin a model per agent, do so — e.g. the `workflow`
-tool's `agent()` accepts `provider`/`model` overrides. Otherwise keep
-the role-tiering mental model above, and in escalation rounds re-dispatch
-with the stronger tier configured.)
+most expensive — which silently defeats this section. (DSH note: child
+model selection is opt-in. DSH's `modelSelectionSettings` defaults to
+`false`, so by default `subagent`/`subagent_fork` expose no `model`
+argument and the child inherits the session route. When the host enables
+it, pass `provider` + `model` (and optional `reasoning_effort`) after
+discovering routes with `list_subagent_models`. Otherwise pin the tier
+via session/harness configuration, or per agent with the `workflow`
+tool's `agent()` `provider`/`model` overrides, and keep the role-tiering
+mental model above: in escalation rounds, re-dispatch with the stronger
+tier configured.)
 
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the

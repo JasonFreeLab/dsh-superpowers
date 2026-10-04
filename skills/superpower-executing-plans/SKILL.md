@@ -321,9 +321,12 @@ with the package path, the plan and spec paths, the plan's Review Focus
 section verbatim if it has one (the input classes and failure modes the
 plan's tests do not exercise — the reviewer checks each deliberately), and
 a pointer to the ledger's `Ruling:` lines so it can weigh the calls you
-made. Specify the model explicitly where the platform allows it (DSH's
-`workflow` tool `agent()` accepts `provider`/`model` overrides); an omitted
-model inherits the session's, which may not be the most capable. This is
+made. Specify the model explicitly where the platform allows it: when the
+host enables DSH child model selection (`modelSelectionSettings`), pass
+`provider` + `model` to `subagent` after discovering routes with
+`list_subagent_models`; otherwise use the `workflow` tool's `agent()`
+`provider`/`model` overrides or session configuration. An omitted model
+inherits the session's, which may not be the most capable. This is
 the one fresh context the whole run buys. Do not skip it, and do not
 replace it with your own read of the diff.
 

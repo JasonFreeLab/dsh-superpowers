@@ -187,9 +187,12 @@ subagent:
 
 **Placeholders:**
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection. (DSH
-  note: the `subagent` tool takes no per-call model argument; set the tier
-  via session/harness configuration, or pin it per agent with the
-  `workflow` tool's `agent()` `model`/`provider` overrides.)
+  note: child model selection is opt-in — by default the `subagent` tool
+  exposes no `model` argument and the child inherits the session route.
+  When the host enables it, pass `provider` + `model` after
+  `list_subagent_models`; otherwise set the tier via session/harness
+  configuration or pin it per agent with the `workflow` tool's `agent()`
+  `model`/`provider` overrides.)
 - `[BRIEF_FILE]` — REQUIRED: the task brief file (the inline task-brief
   helper in SKILL.md prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from

@@ -104,7 +104,9 @@ obra 原文引用的是 Claude Code 工具，本包已映射到 DSH 工具（详
 | Task（子代理） | `subagent` / `subagent_fork` |
 | ExitPlanMode | `exit_plan_mode` |
 | AskUserQuestion | `ask_user_question` |
-| WebFetch / WebSearch | `read_page` / `web_search` |
+| WebFetch / WebSearch | `web_fetch` / `web_search` |
+| 呈现交付物 | `present` |
+| 读取图片 | `read_image` |
 | 加载技能 | `skill` 工具 / `/name` 手势 |
 
 ## 目录结构

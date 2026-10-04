@@ -104,7 +104,9 @@ Upstream references Claude Code tools; this package maps them onto DSH tools (se
 | Task (subagent) | `subagent` / `subagent_fork` |
 | ExitPlanMode | `exit_plan_mode` |
 | AskUserQuestion | `ask_user_question` |
-| WebFetch / WebSearch | `read_page` / `web_search` |
+| WebFetch / WebSearch | `web_fetch` / `web_search` |
+| Present a deliverable | `present` |
+| Read an image | `read_image` |
 | Load a skill | `skill` tool / `/name` gesture |
 
 ## Layout
