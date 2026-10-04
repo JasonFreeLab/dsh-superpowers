@@ -6,7 +6,7 @@ English | [中文](README.zh.md)
 
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port of [obra/superpowers](https://github.com/obra/superpowers) — the full multi-agent software-development methodology, available out of the box as native DSH skills.
 
-> Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v6.3.0, by Jesse Vincent / Prime Radiant). Skill content is taken directly from upstream and mapped onto the DSH toolset.
+> Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v6.4.2, by Jesse Vincent / Prime Radiant). Skill content is taken directly from upstream and mapped onto the DSH toolset.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port
 
 ## Features
 
-- **14 methodology skills** — brainstorm → plan → TDD → systematic debugging → code review → integrate.
+- **15 methodology skills** — brainstorm → plan → TDD → systematic debugging → code review → integrate, plus session diagnosis.
 - **Native DSH skills** — injected into `ctx.skills` via a `SkillProvider` (rank 550; overridable by project/user skills).
 - **English (i18n)** — skill content kept in original English; Chinese docs in `README.zh.md`.
 - **Zero-build install** — `lib/` is committed, so GitHub installs need no build step.
@@ -56,7 +56,7 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 ### In the DSH web UI
 
 1. Start the web UI and open the printed URL: `dsh web` (alias of `dsh --profile web`).
-2. Start a new session. The 14 skills are registered automatically in `ctx.skills` and appear in the model's `<available_skills>` catalog — no extra setup.
+2. Start a new session. The 15 skills are registered automatically in `ctx.skills` and appear in the model's `<available_skills>` catalog — no extra setup.
 3. The model loads the matching skill by itself via the `skill` tool.
 4. You can also invoke a skill explicitly with `/skill-name`, e.g. `/superpower-brainstorming`.
 
@@ -66,9 +66,10 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 Build me X    → superpower-brainstorming → superpower-writing-plans → superpower-subagent-driven-development
 Fix this bug  → superpower-systematic-debugging
 Review this   → superpower-requesting-code-review
+Session went wrong → superpower-diagnosing-superpowers
 ```
 
-Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries with `provider: superpowers`.
+Verify: inside a session `await ctx.skills.list({cwd})` should return 15 entries with `provider: superpowers`.
 
 ## Included skills
 
@@ -78,7 +79,7 @@ Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries
 | `superpower-brainstorming` | Use before any creative work — creating features, building components, adding functionality, or modifying behavior |
 | `superpower-writing-plans` | Use when you have a spec or requirements for a multi-step task, before touching code |
 | `superpower-using-git-worktrees` | Use when starting feature work that needs isolation from the current workspace, or before executing implementation plans |
-| `superpower-executing-plans` | Use when you have a written implementation plan to execute in a separate session with review checkpoints |
+| `superpower-executing-plans` | Use when executing a plan inline in the current session as the implementer yourself — your human partner chose inline execution, or no subagent tool is available |
 | `superpower-subagent-driven-development` | Use when executing implementation plans with independent tasks in the current session |
 | `superpower-dispatching-parallel-agents` | Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies |
 | `superpower-test-driven-development` | Use when implementing any feature or bugfix, before writing implementation code |
@@ -88,6 +89,7 @@ Verify: inside a session `await ctx.skills.list({cwd})` should return 14 entries
 | `superpower-receiving-code-review` | Use when receiving code review feedback, before implementing suggestions |
 | `superpower-finishing-a-development-branch` | Use when implementation is complete, all tests pass, and you need to decide how to integrate the work |
 | `superpower-writing-skills` | Use when creating new skills, editing existing skills, or verifying skills work before deployment |
+| `superpower-diagnosing-superpowers` | Use when a superpowers session went wrong (repeated work, ignored plans, stumbles, a skill that didn't fire, unexpected cost) — investigate it, or build a maintainer bug report |
 
 ## Tool mapping
 
@@ -109,7 +111,7 @@ Upstream references Claude Code tools; this package maps them onto DSH tools (se
 
 ```
 src/superpowers.ts       # SkillProvider (rank 550), lazily loads SKILL.md bodies
-skills/                  # 14 skills (English, with references/)
+skills/                  # 15 skills (English, with references/)
 lib/                     # build output (committed for zero-build installs)
 scripts/                 # test.mjs + verify.mjs
 cordis.patch.yml         # bundle patch

@@ -6,7 +6,7 @@
 
 [obra/superpowers](https://github.com/obra/superpowers) 的 [DSH](https://github.com/deepseek-ai/deepseek-harness)（DeepSeek Harness）移植版 —— 把完整的多智能体软件开发方法论以**原生 DSH 技能**形式开箱即用。
 
-> 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v6.3.0，作者 Jesse Vincent / Prime Radiant）。技能内容直接取自上游，并映射到 DSH 工具集。
+> 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v6.4.2，作者 Jesse Vincent / Prime Radiant）。技能内容直接取自上游，并映射到 DSH 工具集。
 
 ## 目录
 
@@ -22,7 +22,7 @@
 
 ## 特性
 
-- **14 个方法论技能** —— 头脑风暴 → 计划 → TDD → 系统化调试 → 代码评审 → 集成。
+- **15 个方法论技能** —— 头脑风暴 → 计划 → TDD → 系统化调试 → 代码评审 → 集成，另含会话诊断。
 - **原生 DSH 技能** —— 通过 `SkillProvider` 注入 `ctx.skills`（rank 550，可被项目/用户技能覆盖）。
 - **英文国际化** —— 技能内容保持英文原文；中文文档见 `README.zh.md`。
 - **零构建安装** —— `lib/` 已提交，GitHub 直装无需构建。
@@ -56,7 +56,7 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 ### 在 DSH web 界面
 
 1. 启动 web 界面并打开打印出的地址：`dsh web`（即 `dsh --profile web`）。
-2. 新建会话。14 个技能会自动注册到 `ctx.skills`，并出现在模型的 `<available_skills>` 目录里——无需额外配置。
+2. 新建会话。15 个技能会自动注册到 `ctx.skills`，并出现在模型的 `<available_skills>` 目录里——无需额外配置。
 3. 模型会通过 `skill` 工具自行加载匹配的技能。
 4. 你也可以显式调用：输入 `/技能名`，例如 `/superpower-brainstorming`。
 
@@ -66,9 +66,10 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 帮我做 XXX   → superpower-brainstorming → superpower-writing-plans → superpower-subagent-driven-development
 修这个缺陷   → superpower-systematic-debugging
 帮我评审     → superpower-requesting-code-review
+会话出问题   → superpower-diagnosing-superpowers
 ```
 
-校验：进入会话后 `await ctx.skills.list({cwd})` 应有 14 条 `provider: superpowers`。
+校验：进入会话后 `await ctx.skills.list({cwd})` 应有 15 条 `provider: superpowers`。
 
 ## 包含技能
 
@@ -78,7 +79,7 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 | `superpower-brainstorming` | 任何创造性工作之前（新功能/组件/改行为） |
 | `superpower-writing-plans` | 有了规格/需求、动手写代码之前 |
 | `superpower-using-git-worktrees` | 需要隔离工作区或执行计划之前 |
-| `superpower-executing-plans` | 有书面实现计划要执行（带评审检查点） |
+| `superpower-executing-plans` | 在当前会话中由你自己内联执行计划（人类伙伴选择了内联执行，或无子代理工具） |
 | `superpower-subagent-driven-development` | 按计划逐任务派子代理执行 |
 | `superpower-dispatching-parallel-agents` | 面对 2+ 个互不依赖的独立任务 |
 | `superpower-test-driven-development` | 实现任何功能/修复之前（RED-GREEN-REFACTOR） |
@@ -88,6 +89,7 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 | `superpower-receiving-code-review` | 收到评审反馈、动手实现建议之前 |
 | `superpower-finishing-a-development-branch` | 实现完成、测试通过，决定如何集成 |
 | `superpower-writing-skills` | 新建/编辑/验证技能之前 |
+| `superpower-diagnosing-superpowers` | superpowers 会话出了问题（重复劳动、无视计划、频繁卡壳、技能未触发、成本异常）时，排查原因或生成给维护者的缺陷报告 |
 
 ## 工具映射
 
@@ -109,7 +111,7 @@ obra 原文引用的是 Claude Code 工具，本包已映射到 DSH 工具（详
 
 ```
 src/superpowers.ts       # SkillProvider（rank 550），惰性加载 SKILL.md 正文
-skills/                  # 14 个技能（英文，含 references/）
+skills/                  # 15 个技能（英文，含 references/）
 lib/                     # 构建产物（已提交，GitHub 直装零构建）
 scripts/                 # test.mjs + verify.mjs
 cordis.patch.yml         # bundle patch
