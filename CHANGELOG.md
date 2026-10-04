@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/JasonFreeLab/dsh-superpowers/compare/v0.2.0...v0.3.0) (2026-10-04)
+
+
+### Features
+
+* **skill:** orchestrate diagnosing fan-outs with DSH workflow + schema ([a385157](https://github.com/JasonFreeLab/dsh-superpowers/commit/a3851574af4d093c189892359e574ad427e76a9b))
+* **skills:** upgrade bundled skills to obra/superpowers v6.4.2 ([283e291](https://github.com/JasonFreeLab/dsh-superpowers/commit/283e291d82d06aa59fa278abd42e291d9c582554))
+
+
+### Bug Fixes
+
+* **docs:** correct DSH tool mapping for 0.2.0-rc.2 ([773370d](https://github.com/JasonFreeLab/dsh-superpowers/commit/773370dcccd3176b22942bb0be3eaecf69acbbe8))
+
 ## [0.2.0](https://github.com/JasonFreeLab/dsh-superpowers/compare/v0.1.3...v0.2.0) (2026-09-05)
 
 
