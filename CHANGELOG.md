@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/JasonFreeLab/dsh-superpowers/compare/v0.3.1...v0.4.0) (2026-11-18)
+
+
+### Features
+
+* **skills:** upgrade bundled skills to obra/superpowers v7.0.2 ([9818ac8](https://github.com/JasonFreeLab/dsh-superpowers/commit/9818ac862efa7ee05eea33c59a47b68859a41c64))
+
 ## [0.3.1](https://github.com/JasonFreeLab/dsh-superpowers/compare/v0.3.0...v0.3.1) (2026-10-04)
 
 
