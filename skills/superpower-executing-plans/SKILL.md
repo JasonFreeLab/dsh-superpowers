@@ -128,11 +128,25 @@ All bookkeeping in this skill is done with inline `bash` equivalents because
 DSH does not bundle the upstream helper scripts. Run the snippets below
 through the `bash` tool (or do the same steps with `read`/`write`/`edit`).
 
+**Repository:** every helper runs from inside the git working tree you are
+executing in, and the plan path never picks the repository. An executor in a
+linked worktree may hold an absolute plan path in the main checkout, but its
+workspace and commits belong to the worktree; a caller outside any repository
+would otherwise act on whichever checkout the plan path points into. Resolve
+the repository from the current directory and require a commit:
+
+```bash
+root=$(git rev-parse --show-toplevel) || { echo "SDD helpers must run from inside the git working tree you're executing in" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet HEAD >/dev/null || { echo "SDD helpers need at least one commit in $root" >&2; exit 2; }
+```
+
 ### Resolve the workspace (shared helper)
 
 ```bash
 # plan=PLAN_FILE; prints this plan's git-ignored workspace directory.
-root="$(git rev-parse --show-toplevel)"; base="$root/.superpowers/sdd"
+root=$(git rev-parse --show-toplevel) || { echo "SDD helpers must run from inside the git working tree you're executing in" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet HEAD >/dev/null || { echo "SDD helpers need at least one commit in $root" >&2; exit 2; }
+base="$root/.superpowers/sdd"
 slug="$(basename "$plan" .md)"
 plan_dir="$(CDPATH= cd -- "$(dirname "$plan")" && pwd -P)"
 plan_abs="$plan_dir/$(basename "$plan")"
@@ -146,7 +160,7 @@ if ! owns "$dir"; then
   parent="$(basename "$plan_dir")"; dir="$base/$slug-$parent"
   if ! owns "$dir"; then n=2; while ! owns "$base/$slug-$parent-$n"; do n=$((n+1)); done; dir="$base/$slug-$parent-$n"; fi
 fi
-printf '*\n' > "$base/.gitignore"
+[ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
 printf '%s\n' "$dir"
 ```
 
@@ -154,7 +168,9 @@ This mirrors the upstream `sdd-workspace` helper, including its collision
 rule: two plans whose filenames match (`docs/alpha/plan.md` vs
 `docs/beta/plan.md`) get separate directories, each recording its owning
 plan in a `plan-path` marker. A marker-less workspace predates the marker
-scheme and is adopted by the first plan to claim it.
+scheme and is adopted by the first plan to claim it. The `.gitignore` is
+created only when absent, so a repo that commits its own ignore file keeps
+it.
 
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are
@@ -197,19 +213,59 @@ in the workspace and read its tail; read a brief, not the whole plan.
 
 ### 1. Take the task
 
-Run this inline `task-start` helper — it extracts the brief and records BASE
-in one call:
+Run this inline `task-start` helper — it resolves the repository, extracts the
+brief, and records BASE in one call. Run it from the working tree you are
+executing in; the plan path never picks the repository:
 
 ```bash
 # plan=PLAN_FILE; n=TASK_NUMBER; workspace=<from Setup>
-awk -v n="$n" '
-  /^```/ { infence = !infence }
-  !infence && /^#+[ \t]+Task[ \t]+/ { intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)")) }
-  intask { print }
-' "$plan" > "$workspace/task-$n-brief.md"
-echo "brief: $workspace/task-$n-brief.md"
-echo "base: $(git rev-parse HEAD)"
+root=$(git rev-parse --show-toplevel) || { echo "SDD helpers must run from inside the git working tree you're executing in" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet HEAD >/dev/null || { echo "SDD helpers need at least one commit in $root" >&2; exit 2; }
+out="$workspace/task-$n-brief.md"
+rc=0
+TASK_BRIEF_PLAN="$plan" awk -v n="$n" '
+  /^```/ { infence = !infence; if (infence) { fence_line = NR; hidden = 0 } }
+  infence && /^#+[ \t]+Task[ \t]/ { hidden = 1 }
+  !infence && /^#+[ \t]+Task[ \t]/ {
+    id = $0
+    sub(/^#+[ \t]+Task[ \t]+/, "", id)
+    if (match(id, /^[A-Za-z0-9]+(\.[A-Za-z0-9]+)*/) && substr(id, 1, RLENGTH) ~ /[0-9]/) {
+      tasks++
+      id = substr(id, 1, RLENGTH)
+      match($0, /^#+/)
+      subtask = intask && RLENGTH > level && substr(id, 1, length(n)) == n \
+        && substr(id, length(n) + 1, 1) ~ /[A-Za-z.]/
+      if (!subtask) {
+        intask = (id == n)
+        level = RLENGTH
+      }
+    }
+  }
+  !infence && /^#+[ \t]+[^ \t]+[ \t]+[A-Za-z0-9.]*[0-9]/ && shaped < 5 { shaped_heading[++shaped] = $0 }
+  intask { print; found = 1 }
+  END {
+    where = "the code fence opened at line " fence_line " of " ENVIRON["TASK_BRIEF_PLAN"] " never closes"
+    if (infence && hidden && (intask || !found)) {
+      print "task-brief: " where ", so no Task heading after it can be seen; close that fence in the plan and rerun" | "cat >&2"
+      if (intask) exit 4
+    } else if (infence && intask) {
+      print "task-brief: warning: " where "; it hides no Task heading, so this brief is complete" | "cat >&2"
+    }
+    if (!tasks && shaped && !(infence && hidden)) {
+      print "task-brief: no task headings found. Task headings must use the English word \"Task\" (\"### Task 1: ...\"), even when the rest of the plan is in another language. Headings shaped like tasks:" | "cat >&2"
+      for (i = 1; i <= shaped; i++) print "  " shaped_heading[i] | "cat >&2"
+    }
+  }
+' "$plan" > "$out" || rc=$?
+[ "$rc" -eq 0 ] || { rm -f "$out"; exit "$rc"; }
+[ -s "$out" ] || { echo "task ${n} not found in ${plan} (no heading matching \"Task ${n}\")" >&2; exit 2; }
+echo "brief: $out"
+echo "base: $(git -C "$root" rev-parse --verify HEAD)"
 ```
+
+The awk refuses a brief whose closing fence is missing (exit 4) rather than
+running the task through later tasks, and accepts task IDs like `3`, `6b`,
+`A1`, and `2.1`.
 
 Read the brief for every task, including ones you remember from setup:
 what you remember is a summary, the brief has the exact values,
@@ -268,6 +324,9 @@ completion line to the ledger:
 
 ```bash
 # plan=PLAN_FILE; n=TASK_NUMBER; base=BASE_SHA; workspace=<from Setup>.
+root=$(git rev-parse --show-toplevel) || { echo "SDD helpers must run from inside the git working tree you're executing in" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet HEAD >/dev/null || { echo "SDD helpers need at least one commit in $root" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
 # Set cmd to the whole-task test command the brief names, then run this block.
 cmd=(npm test -- hooks)          # <-- substitute the brief's test command
 log="$workspace/task-$n-tests.log"
@@ -276,9 +335,10 @@ tail -n 5 "$log"
 if [ "$rc" -eq 0 ]; then
   ledger="$workspace/progress.md"
   [ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
+  last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
   printf 'Task %s: complete (commits %s..%s, tests: %s → %s)\n' \
-    "$n" "$(git rev-parse --short=7 "$base")" "$(git rev-parse --short=7 HEAD)" \
-    "${cmd[*]}" "$(grep -v '^[[:space:]]*$' "$log" | tail -n 1)" >> "$ledger"
+    "$n" "$(git -C "$root" rev-parse --short=7 "$base")" "$(git -C "$root" rev-parse --short=7 HEAD)" \
+    "${cmd[*]}" "$last" >> "$ledger"
 fi
 exit "$rc"
 ```
@@ -292,23 +352,25 @@ mark the todo complete and take the next task.
 
 Generate the review package with the inline `review-package` helper shared
 with superpower-subagent-driven-development (MERGE_BASE = the commit the
-branch started from, e.g. `git merge-base main HEAD`). It refuses empty or
-non-descendant ranges (exit 3) so a wrong-branch HEAD cannot produce a
-"clean" review of nothing:
+branch started from, e.g. `git merge-base main HEAD`). Run it from the
+working tree you are executing in. It refuses empty or non-descendant ranges
+(exit 3) so a wrong-branch HEAD cannot produce a "clean" review of nothing:
 
 ```bash
 # plan=PLAN_FILE; base=MERGE_BASE; head=HEAD; workspace=<from Setup>
+root=$(git rev-parse --show-toplevel) || { echo "SDD helpers must run from inside the git working tree you're executing in" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet HEAD >/dev/null || { echo "SDD helpers need at least one commit in $root" >&2; exit 2; }
 [ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
-git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
-git merge-base --is-ancestor "$base" "$head" || { echo "HEAD is not a descendant of BASE: ${base}..${head}" >&2; exit 3; }
-[ "$(git rev-list --count "${base}..${head}")" -gt 0 ] || { echo "empty commit range: ${base}..${head}" >&2; exit 3; }
-out="$workspace/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+git -C "$root" rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+git -C "$root" rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+git -C "$root" merge-base --is-ancestor "$base" "$head" || { echo "HEAD is not a descendant of BASE: ${base}..${head}" >&2; exit 3; }
+[ "$(git -C "$root" rev-list --count "${base}..${head}")" -gt 0 ] || { echo "empty commit range: ${base}..${head}" >&2; exit 3; }
+out="$workspace/review-$(git -C "$root" rev-parse --short "$base")..$(git -C "$root" rev-parse --short "$head").diff"
 { echo "# Review package: ${base}..${head}"; echo
-  echo "## Commits"; git log --oneline "${base}..${head}"; echo
-  echo "## Files changed"; git diff --stat "${base}..${head}"; echo
-  echo "## Diff"; git diff -U10 "${base}..${head}"; } > "$out"
-echo "wrote ${out}: $(git rev-list --count "${base}..${head}") commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+  echo "## Commits"; git -C "$root" log --oneline "${base}..${head}"; echo
+  echo "## Files changed"; git -C "$root" diff --stat "${base}..${head}"; echo
+  echo "## Diff"; git -C "$root" diff -U10 "${base}..${head}"; } > "$out"
+echo "wrote ${out}: $(git -C "$root" rev-list --count "${base}..${head}") commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
 ```
 
 Review from the file it prints.
@@ -400,54 +462,3 @@ Use superpower-finishing-a-development-branch.
 | "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
 | "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them; your partner decides. |
 
-## Example Workflow
-
-```
-You: I'm using the executing-plans skill to implement this plan inline.
-
-[Setup: worktree verified]
-[Read plan once: docs/superpowers/plans/feature-plan.md; spec read]
-[Resolve workspace: sdd-workspace helper — docs/superpowers/plans/feature-plan.md, no ledger inside, fresh start]
-[Pre-flight scan: 2 shared-interface rows, 4 self-consistency rows, clean; written to ledger]
-[Create todos for all tasks]
-
-Task 1: Hook installation script
-
-[task-start plan 1 → brief read; BASE a1b2c3d]
-[Step 1: write failing test — written]
-[Step 2: run it — FAIL: install_hook not defined. Matches Expected.]
-[Step 3: implement — written]
-[Step 4: run it — PASS 1/1. Matches Expected.]
-[Step 5: commit — d4e5f6a]
-[Contract: tests ran, output read, no deviations]
-[task-done: cmd=(npm test -- hooks) → ledger: Task 1: complete (commits a1b2c3d..d4e5f6a, tests: npm test -- hooks → 1/1 pass)]
-
-Task 2: Recovery modes
-
-[task-start plan 2 → brief read; BASE d4e5f6a]
-[Step 2: run failing test — FAIL, but on an import error: Task 1 exported
- installHook, brief consumes install_hook]
-[Ruling: brief's consumer name is a typo against Task 1's Produces block;
- use installHook — Ledger: Task 2: Ruling: install_hook → installHook — matches Task 1 Produces — cost if wrong: one rename]
-[Steps 2-5 as planned; commit b7c8d9e]
-[task-done: cmd=(npm test -- recovery) → ledger: Task 2: complete (commits d4e5f6a..b7c8d9e, tests: npm test -- recovery → 8/8 pass)]
-
-...
-
-[After all tasks: review-package plan MERGE_BASE HEAD; dispatch code-reviewer, most capable model]
-Reviewer: One Important finding — progress reporting interval hardcoded. Two Minor.
-[Re-grade: Important stands; minors → ledger as deferred]
-[Fix pass: test_progress_interval_configurable RED → extract PROGRESS_INTERVAL → GREEN; suite 12/12; commit]
-[Ledger: Final: fixed hardcoded interval — test_progress_interval_configurable RED→GREEN, suite 12/12]
-
-Rulings I made:
-- Task 2: install_hook → installHook (brief typo; cost if wrong: one rename)
-
-Deferred minors:
-- README lacks a usage example
-- recovery.js could split verify/repair into two files
-
-[Delete this plan's workspace — the record now lives in git]
-
-Using superpower-finishing-a-development-branch.
-```

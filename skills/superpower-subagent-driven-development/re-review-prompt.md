@@ -102,19 +102,26 @@ subagent:
 **Placeholders:**
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
   re-reviews of small fix diffs take a cheap-to-mid tier. (DSH note: child
-  model selection is opt-in — by default the `subagent` tool exposes no
-  `model` argument and the child inherits the session route. When the host
-  enables it, pass `provider` + `model` after `list_subagent_models`;
-  otherwise set the tier via session/harness configuration or pin it per
-  agent with the `workflow` tool's `agent()` `model`/`provider` overrides.)
-- `[BRIEF_FILE]` — the task brief file (same file the implementer worked from)
+  model selection is opt-in — DSH's `modelSelection` and `modelDiscovery`
+  options default to `false`, so by default the `subagent` tool exposes no
+  `provider`/`model` arguments and the child inherits the session route.
+  When the host enables them, pass `provider` + `model` (and optionally
+  `reasoning_effort`) after `list_subagent_models`; an effort-only override
+  is rejected. Otherwise set the tier via session or profile configuration,
+  or pin it per agent with the `workflow` tool's `agent()` `provider`/`model`
+  overrides.)
+- `[BRIEF_FILE]` — the task brief file (the path the inline task-brief
+  helper in SKILL.md printed, from inside the git working tree you're
+  executing in; same file the implementer worked from)
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review, copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — the path the inline review-package helper in SKILL.md
-  printed for the fix range
+  printed for the fix range (run from inside the git working tree you're
+  executing in; it resolves the repo with `git -C "$repo"` and prints the
+  unique path it wrote)
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

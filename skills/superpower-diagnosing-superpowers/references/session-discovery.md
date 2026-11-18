@@ -88,8 +88,11 @@ Observed types and shapes:
   `request/context` (`data.provider`, `data.model`, `data.contextWindow`);
   `subagent/descriptor` (`data.label`, `data.provider`, `data.agentModel`,
   `data.mode`); `system/message` (harness system prompt).
-- Subagent/child sessions have `delegationDepth > 0` and/or a
-  `parentSession` in the header.
+- Subagent sessions have `origin: "subagent"` in the header; delegated
+  children also carry `delegationDepth > 0` and a `parentSession`. Ordinary
+  session forks are independent: they copy history but have no
+  `parentSession` and are not subagents. Identify subagents by
+  `origin === "subagent"`, not by the presence of a parent field.
 - `time` and `createdAt` are epoch milliseconds. The human-visible order is
   file order (line numbers).
 - No dedicated token-usage record was observed in DSH session files. Record
@@ -118,14 +121,15 @@ for n, line in enumerate(sys.stdin, 1):
 ```
 
 Distinguish the requested session from its children and unrelated candidates.
-Enumerate child sessions by reading headers for `parentSession` and
-`delegationDepth > 0`:
+Enumerate candidate children by reading headers: `origin` names subagents,
+while `parentSession` and `delegationDepth` describe delegation. Ordinary
+forks show no parent and are not subagents:
 
 ```bash
 for d in "$DSH_HOME"/sessions/*/*/; do
   f="$d/session.v4.jsonl.zstd"
   [ -f "$f" ] || continue
-  zstd -dc "$f" | sed -n '1p' | python3 -c "import sys,json;h=json.load(sys.stdin);print(h.get('id'), h.get('cwd'), h.get('parentSession'), h.get('delegationDepth'))"
+  zstd -dc "$f" | sed -n '1p' | python3 -c "import sys,json;h=json.load(sys.stdin);print(h.get('id'), h.get('cwd'), 'origin='+str(h.get('origin')), 'parent='+str(h.get('parentSession')), 'depth='+str(h.get('delegationDepth')))"
 done
 ```
 

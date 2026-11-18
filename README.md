@@ -6,7 +6,7 @@ English | [中文](README.zh.md)
 
 A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port of [obra/superpowers](https://github.com/obra/superpowers) — the full multi-agent software-development methodology, available out of the box as native DSH skills.
 
-> Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v6.4.2, by Jesse Vincent / Prime Radiant). Skill content is taken directly from upstream and mapped onto the DSH toolset.
+> Ported from upstream [obra/superpowers](https://github.com/obra/superpowers) (v7.0.2, by Jesse Vincent / Prime Radiant), targeting DSH 0.2.2-rc.4. Skill content is taken directly from upstream and mapped onto the DSH toolset.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ A [DSH](https://github.com/deepseek-ai/deepseek-harness) (DeepSeek Harness) port
 
 ## Install
 
-Using the `web` profile as the example (change `--profile` for others). Requires `Node >= 20`, `pnpm >= 9`, and `dsh`.
+Using the `web` profile as the example (change `--profile` for others). Requires `Node >= 24.9` (DSH 0.2.1+ dropped Node 22), `pnpm >= 9`, and DSH `0.2.2-rc.4` (`engines.dsh` in `package.json` pins the supported range).
 
 ```sh
 # From npm (recommended)
@@ -76,7 +76,7 @@ Verify: inside a session `await ctx.skills.list({cwd})` should return 15 entries
 | Skill | When it triggers |
 | --- | --- |
 | `superpower-using-superpowers` | Use when starting any conversation — establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions |
-| `superpower-brainstorming` | Use before any creative work — creating features, building components, adding functionality, or modifying behavior |
+| `superpower-brainstorming` | Use before any creative work — creating features, building components, adding functionality, or modifying behavior, or planning anything new (v7 rebuild: draws out intent before proposing) |
 | `superpower-writing-plans` | Use when you have a spec or requirements for a multi-step task, before touching code |
 | `superpower-using-git-worktrees` | Use when starting feature work that needs isolation from the current workspace, or before executing implementation plans |
 | `superpower-executing-plans` | Use when executing a plan inline in the current session as the implementer yourself — your human partner chose inline execution, or no subagent tool is available |

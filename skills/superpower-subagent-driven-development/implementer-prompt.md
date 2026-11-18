@@ -2,10 +2,13 @@
 
 Use this template when dispatching an implementer subagent. Dispatch with
 the `subagent` tool (background by default; set `run_in_background: false`
-when your next action depends on its result). Model tier follows SKILL.md
-Model Selection: the `subagent` tool takes no per-call model argument — set
-the tier via your session/harness configuration, or pin it per agent with the
-`workflow` tool's `agent()` `model`/`provider` overrides.
+when your next action depends on its result) and pass an optional `name` so
+later fix rounds can `send_message({ agent, message })` to it. Model tier
+follows SKILL.md Model Selection: child model selection is opt-in in DSH.
+By default `modelSelection`/`modelDiscovery` are `false` and the `subagent`
+tool takes no per-call model argument; when the host enables them, pass
+`provider` + `model` (after `list_subagent_models`), or pin the tier with
+the `workflow` tool's `agent()` `model`/`provider` overrides.
 
 ```
 subagent:

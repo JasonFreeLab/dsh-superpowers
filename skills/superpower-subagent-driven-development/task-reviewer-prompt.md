@@ -187,14 +187,17 @@ subagent:
 
 **Placeholders:**
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection. (DSH
-  note: child model selection is opt-in — by default the `subagent` tool
-  exposes no `model` argument and the child inherits the session route.
-  When the host enables it, pass `provider` + `model` after
-  `list_subagent_models`; otherwise set the tier via session/harness
-  configuration or pin it per agent with the `workflow` tool's `agent()`
-  `model`/`provider` overrides.)
+  note: child model selection is opt-in — DSH's `modelSelection` and
+  `modelDiscovery` options default to `false`, so by default the `subagent`
+  tool exposes no `provider`/`model` arguments and the child inherits the
+  session route. When the host enables them, pass `provider` + `model` (and
+  optionally `reasoning_effort`) after `list_subagent_models`; an
+  effort-only override is rejected. Otherwise set the tier via session or
+  profile configuration, or pin it per agent with the `workflow` tool's
+  `agent()` `provider`/`model` overrides.)
 - `[BRIEF_FILE]` — REQUIRED: the task brief file (the inline task-brief
-  helper in SKILL.md prints the path; same file the implementer worked from)
+  helper in SKILL.md, run from inside the git working tree you're executing
+  in, prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
   the plan's Global Constraints section or the spec: exact values, formats,
   and stated relationships between components (not process rules — those
@@ -204,8 +207,10 @@ subagent:
 - `[BASE_SHA]` — commit before this task
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (the inline review-package helper in SKILL.md prints the unique
-  path it wrote; the package never enters the controller's context)
+  package to (the inline review-package helper in SKILL.md, run by its
+  snippet from inside the git working tree you're executing in and resolved
+  with `git -C "$repo"`, prints the unique path it wrote; the package never
+  enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
 (Critical/Important/Minor), Task quality verdict

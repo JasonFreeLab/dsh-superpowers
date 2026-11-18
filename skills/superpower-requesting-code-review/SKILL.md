@@ -52,7 +52,7 @@ Dispatch a code reviewer subagent with the `subagent` tool, filling the template
 
 You: Let me request code review before proceeding.
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
+BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | cut -d' ' -f1)
 HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch code reviewer subagent]

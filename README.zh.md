@@ -6,7 +6,7 @@
 
 [obra/superpowers](https://github.com/obra/superpowers) 的 [DSH](https://github.com/deepseek-ai/deepseek-harness)（DeepSeek Harness）移植版 —— 把完整的多智能体软件开发方法论以**原生 DSH 技能**形式开箱即用。
 
-> 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v6.4.2，作者 Jesse Vincent / Prime Radiant）。技能内容直接取自上游，并映射到 DSH 工具集。
+> 移植自上游 [obra/superpowers](https://github.com/obra/superpowers)（v7.0.2，作者 Jesse Vincent / Prime Radiant），面向 DSH 0.2.2-rc.4。技能内容直接取自上游，并映射到 DSH 工具集。
 
 ## 目录
 
@@ -30,7 +30,7 @@
 
 ## 安装
 
-以主工作台 `web` 为例（其它 profile 改 `--profile`）。前置：`Node >= 20`、`pnpm >= 9`、`dsh`。
+以主工作台 `web` 为例（其它 profile 改 `--profile`）。前置：`Node >= 24.9`（DSH 0.2.1+ 不再支持 Node 22）、`pnpm >= 9`、DSH `0.2.2-rc.4`（`package.json` 的 `engines.dsh` 已限定支持范围）。
 
 ```sh
 # 从 npm 安装（推荐）
@@ -76,7 +76,7 @@ dsh plugin --profile web remove @jasonfreelab/dsh-superpowers
 | 技能 | 触发时机 |
 | --- | --- |
 | `superpower-using-superpowers` | 任意会话起点，先加载技能再回应 |
-| `superpower-brainstorming` | 任何创造性工作之前（新功能/组件/改行为） |
+| `superpower-brainstorming` | 任何创造性工作之前（新功能/组件/改行为）；v7 重建：先弄清意图再提方案 |
 | `superpower-writing-plans` | 有了规格/需求、动手写代码之前 |
 | `superpower-using-git-worktrees` | 需要隔离工作区或执行计划之前 |
 | `superpower-executing-plans` | 在当前会话中由你自己内联执行计划（人类伙伴选择了内联执行，或无子代理工具） |

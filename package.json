@@ -43,16 +43,16 @@
     "yaml": "^2.4.2"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.4",
-    "@deepseek-ai/dsh-skill": "^0.2.0-rc.2",
-    "@deepseek-ai/schemastery": "^3.18.4"
+    "@deepseek-ai/cordis": "^4.1.0",
+    "@deepseek-ai/dsh-skill": "^0.2.2-rc.4",
+    "@deepseek-ai/schemastery": "^3.19.0"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "^4.0.4",
-    "@deepseek-ai/dsh-skill": "^0.2.0-rc.2",
-    "@deepseek-ai/schemastery": "^3.18.4",
+    "@deepseek-ai/cordis": "^4.1.0",
+    "@deepseek-ai/dsh-skill": "^0.2.2-rc.4",
+    "@deepseek-ai/schemastery": "^3.19.0",
     "typescript": "^5.6.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^24.0.0"
   },
   "license": "MIT",
   "publishConfig": {
@@ -67,7 +67,8 @@
     "url": "https://github.com/JasonFreeLab/dsh-superpowers/issues"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24.9",
+    "dsh": ">=0.2.2-rc.4 <0.3.0"
   },
   "keywords": [
     "dsh",

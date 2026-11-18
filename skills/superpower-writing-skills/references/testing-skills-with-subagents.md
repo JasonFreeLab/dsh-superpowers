@@ -12,7 +12,7 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **REQUIRED BACKGROUND:** You MUST understand `superpower-test-driven-development` before using this skill (load it via the `skill` tool). That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
-**Complete worked example:** DSH does not bundle the example test campaign; apply the methodology below to your own scenarios.
+**Complete worked example:** See [CLAUDE_MD_TESTING.md](CLAUDE_MD_TESTING.md) for a full test campaign testing instruction-file documentation variants.
 
 ## When to Use
 
@@ -139,7 +139,7 @@ Forces explicit choice.
 
 **Best tests combine 3+ pressures.**
 
-**Why this works:** See persuasion-principles.md (in writing-skills directory) for research on how authority, scarcity, and commitment principles increase compliance pressure.
+**Why this works:** See `persuasion-principles.md` (in this directory) for research on how authority, scarcity, and commitment principles increase compliance pressure.
 
 ### Key Elements of Good Scenarios
 
@@ -159,6 +159,8 @@ You have access to: [skill-being-tested]
 ```
 
 Make agent believe it's real work, not a quiz.
+
+In DSH, dispatch each scenario with the `subagent` tool: include the scenario (and, for GREEN runs, the skill under test) in the prompt. Use `subagent_fork` only when the test must inherit the current conversation; a fresh-context `subagent` run is the realistic baseline.
 
 ## REFACTOR Phase: Close Loopholes (Stay Green)
 
